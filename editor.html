@@ -235,7 +235,7 @@
                 if(typeof str=="string"){
                     if(str[0]=="#"&&str.length==7){
                         readColorCode(str);
-                    }else if(/^rgba\((?:\d+\,){3}\d+\)/.test(str)){
+                    }else if(/^rgba\((?:\d+\,){3}[\d\.]+\)/.test(str)){
                         let s=str.slice(5,-1).split(",");
                         this.r=s[0];
                         this.g=s[1];
@@ -555,7 +555,6 @@
         
         function loadSkin(d){
             SKIN_INFO=d;
-            //alert(JSON.stringify(d))
             let img=new Image();
             img.src=d.texture;
             ide("partName").innerText=d.name;
@@ -563,9 +562,11 @@
                 draw.height=img.height;
                 draw.width=img.width;
                 ctx.drawImage(img,0,0);
-                if(d.editor.pen){
-                    setPen(d.editor.pen);
-                    readPen(d.editor.pen);
+                let pen=d.editor.pen;
+                //alert(JSON.stringify(d.editor.pen))
+                if(pen){
+                    setPen(pen);
+                    readPen(pen);
                 }
                 useGlobalColor();
                 LOAD_FUNC();
@@ -578,11 +579,14 @@
         }
         
         function closeWindow(save){
+            let n=SKIN_INFO.editor;
+            n=Object.assign({pen:{}},n);
+            n.pen.color=DRAW_OPT.obj.color.toString();
             HFrame.send({
                 event:"close",
                 save:save?{
                     code:draw.toDataURL(),
-                    editor:SKIN_INFO.editor
+                    editor:n
                 }:null
             })
         }
@@ -591,6 +595,7 @@
         
         //读取笔数据
         function readPen(obj){
+            //obj是一个完整的pen设置
             if(!obj){
                 let ipt=Array.from(ide("selectPen").querySelectorAll("[tag]"));
                 obj={};
@@ -630,6 +635,7 @@
         }
         //使笔数据设置到UI
         function setPen(obj){
+            //obj是一个完整的pen设置
             if(!obj)obj=DRAW_OPT.obj;
             ide("selectColor").style.background=obj.color.toString(true);
             ide("blackBackground").style.display="none";

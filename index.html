@@ -138,7 +138,8 @@
                 return String(Math.random()).slice(8);
             }
             this.editor={
-                modes:{}
+                modes:{},
+                pen:{}
             }
             this.setSkin(obj);
             this.addEventListener("click",()=>{
@@ -326,11 +327,11 @@
             setSkin({name:name});
         }*/
         try{
-        setSkin({
+        /*setSkin({
             name:"creeper",
             texture:b64sk.raw.creeper,
             model:"alex"
-        });
+        });*/
         setSkin({
             name:"alex",
             texture:b64sk.raw.alex,
@@ -377,9 +378,24 @@
         }
     }
     
+    function createSkin(){
+        let n=prompt("请输入新皮肤名字","New skin");
+        if(!n)return;
+        setSkin({
+            name:n,
+            model:"steve",
+            texture:b64sk.raw.dummy
+        },true)
+    }
+    
     function setSkin(obj,save){
         let n=new Skin(obj,!save);
-        ide("ctnr").appendChild(n);
+        let ctnr=ide("ctnr");
+        if(save){
+            ctnr.insertBefore(n,ctnr.firstElementChild);
+        }else{
+            ctnr.appendChild(n);
+        }
         if(save){
             saveData();
         }
@@ -391,7 +407,7 @@
     <div id="headbar">
         <a onclick="importSkin()">导入</a>
         <div>ShadowSkin</div>
-        <a>新建</a>
+        <a onclick="createSkin()">新建</a>
     </div>
     <div id="ctnr"></div>
     </div>
