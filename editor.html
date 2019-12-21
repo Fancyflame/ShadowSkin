@@ -1,0 +1,767 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <!--meta name="theme-color" content=""-->
+    <meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+    <meta content="user-scalable=0;" name="viewport" />
+    <title>ShadowSkin - Editor</title>
+  </head>
+  <noscript>
+    <mark style="font-size:60px;color:red;">请使用带JavaScript的浏览器！</mark>
+  </noscript>
+  <body onload="load_()">
+      <!--script src="debugger.js"></script-->
+    <style>
+      *{
+          /*color:white;*/
+          font-size:40px;
+      }
+      .anima{
+          transition:all 0.1s;
+          transition-timing-function:linear;
+      }
+      html,body{
+        height:100%;
+        margin:0;
+        background:dimgrey;
+        position:relative;
+      }
+      #draw{
+          image-rendering:pixelated;
+          transform:scale(70,70);
+          position:absolute;
+          top:50%;
+          left:50%;
+          box-shadow:0px 0px 0.2px 0.2px #444;
+          margin:auto;
+          display:block;
+          border:none;
+          background:linear-gradient(30deg,#fff,#333,#fff,#333,#fff,#333);
+      }
+    #headbar{
+        color:white;
+        display:grid;
+        grid-template-columns:1fr 4fr 1fr;
+        text-align:center;
+        width:100%;
+        height:12%;
+        background:#444;
+        box-shadow:0px 3px 20px 20px dimgrey;
+    }
+    #partName{
+        font-size:100px;
+    }
+    #headbar button{
+        color:white;
+        background:#333;
+        box-shadow:0px 0px 10px 10px #222;
+        border-radius:10px;
+        min-width:100px;
+        min-height:50px;
+        display:block;
+        border:none;
+    }
+    #headbar > button{
+        margin:auto;
+    }
+    
+    /*画笔选择*/
+    #blackBackground{
+        top:0%;
+        width:100%;
+        height:100%;
+        position:fixed;
+        background-color:rgba(0,0,0,0.3);
+    }
+    #selectPen{
+        color:yellowgreen;
+        height:80%;
+        width:80%;
+        position:absolute;
+        top:10%;
+        left:10%;
+        border-radius:10px;
+        background-color:#888;
+        text-shadow:0px 0px 3px #222;
+        overflow:hidden;
+    }
+    #selectPen table{
+        margin:30px;
+        width:calc(100% - 60px);
+    }
+    #selectPen td{
+        height:5vh;
+        font-size:1.5em;
+        display:flex;
+    }
+    #selectPen tr >:nth-child(2) span{
+        font-size:0.7em
+    }
+    #selectPen td > *{
+        flex-grow:0;
+    }
+    #selectPen input,#selectPen select{
+        flex-grow:1;
+        flex-shrink:1;
+        height:100%;
+        /*width:100%;*/
+        box-sizing:border-box;
+    }
+    #penPreview{
+        background:white;
+        margin:20px;
+        width:calc(10% - 5px);
+        height:2vh;
+        position:relative;
+        transform-origin:left top;
+        transform:scale(10,10);
+    }
+    #aaaa{
+        bottom:0;
+        position:absolute;
+        color:yellowgreen;
+        display:flex;
+        width:100%;
+        background:silver;
+        justify-content:space-between;
+    }
+    #aaaa a{
+        margin:20px;
+        display:block;
+        font-size:1.2em;
+    }
+    
+    /*顶部文件操作*/
+    #top{
+        display:flex;
+        width:100%;
+        height:7vh;
+        justify-content:flex-end;
+    }
+    #top img{
+        height:100%;
+        display:block;
+    }
+    
+    img{
+        image-rendering:pixelated;
+    }
+    /*工具栏*/
+    
+    #under{
+        bottom:0;
+        position:absolute;
+        height:10vh;
+        /*border-top:1px solid silver;*/
+        width:100%;
+        display:flex;
+    }
+    #colorctnr{
+        height:100%;
+        border-right:5px solid white;
+        width:10vw;
+        flex-grow:0;
+    }
+    #selectColor{
+        width:100%;
+        height:100%;
+        border:none;
+        margin:0;
+        padding:0;
+        display:block;
+    }
+    #toolBar{
+        flex-grow:1;
+        width:0;
+        overflow-x:scroll;
+        white-space:nowrap;
+        overflow-y:hidden;
+    }
+    .tool{
+        /*border-radius:15px;*/
+        display:inline-block;
+        width:15vw;
+        height:15vw;
+        margin:auto 10px;
+        overflow:hidden;
+        margin-bottom:20px;
+        box-sizing:content-box;
+    }
+    .tool>:first-child{
+        width:100%;
+        height:100%;
+        border:none;
+    }
+    .tool[selected=true]{
+        border-bottom:10px solid yellowgreen;
+    }
+    #mode{
+        width:30vw;
+        height:5vh;
+        position:absolute;
+        display:block;
+        left:50%;
+        transform:translateX(-50%);
+        bottom:12vh;
+        border:none;
+        box-shadow:0 0 20px -5px white;
+        background-color:#777;
+        border-radius:1000px;
+        color:white;
+        opacity:0;
+    }
+    
+    </style>
+    <script src="hframe.js"></script>
+    <script src="debugger.js"></script>
+    <script>
+        class Color{
+            constructor(str){
+                this.r=0;
+                this.g=0;
+                this.b=0;
+                this.a=1;
+                this.read.call(this,str);
+            }
+            read(str){
+                if(!str)return;
+                let readColorCode=(s)=>{
+                    let arr=s.slice(1).match(/.{2}/g);
+                    arr=Array.from(arr).map(x=>parseInt(x,16));
+                    this.r=arr[0];
+                    this.g=arr[1];
+                    this.b=arr[2];
+                }
+                if(typeof str=="string"){
+                    if(str[0]=="#"&&str.length==7){
+                        readColorCode(str);
+                    }else if(/^rgba\((?:\d+\,){3}\d+\)/.test(str)){
+                        let s=str.slice(5,-1).split(",");
+                        this.r=s[0];
+                        this.g=s[1];
+                        this.b=s[2];
+                        this.a=s[3];
+                    }else throw "cannot read string:"+str;
+                }else if(typeof str=="object"){
+                    readColorCode(str.code);
+                    let opa=str.opacity;
+                    if(opa>1){
+                        //不断除以10以至于属于(0,1)。
+                        let q=Math.ceil(Math.log(opa)/Math.log(10));
+                        opa/=10**q;
+                    }
+                    this.a=opa.toFixed(4);
+                }else{
+                    throw "The given object was not support."
+                }
+            }
+            toString(code){
+                let arr=[this.r,this.g,this.b,this.a];
+                if(code){
+                    arr.pop();
+                    let a=arr.map(x=>{
+                        x=x.toString(16).toUpperCase();
+                        return ("00"+x).slice(-2);
+                    });
+                    return "#"+a.join("");
+                }else{
+                    return "rgba("+arr.join(",")+")";
+                }
+            }
+            maprgb(fn){
+                let l="rgb".split("");
+                let map=(n)=>{
+                    let m=fn(this[n],n);
+                    if((typeof m=="number")&&(!isNaN(m))){
+                        this[n]=m;
+                    }
+                }
+                l.forEach(e=>void map(e));
+            }
+        }
+        let TOOLS={};
+        let STEPS=[];
+        let REDO_STEPS=[];
+        let SKIN_INFO={};
+        let LOAD_FUNC=()=>{};
+        let DRAW_OPT={
+            obj:{
+                color:new Color({
+                    code:"#ff00ff",
+                    opacity:20
+                }),
+                radius:0,
+                nib:"square"
+            }
+        };
+        let draw;
+        let ctx;
+        let UNLOAD_TOOL=()=>{};
+        function ide(n){
+            return document.getElementById(n);
+        }
+        
+        window.addEventListener("msg",(d)=>{
+            loadSkin(d.detail);
+        });
+        
+        class Tool{
+            constructor(m,i){
+                {
+                    let a=this;
+                    a=Object.assign(this,m);
+                }
+                m.name=i;
+                let d=document.createElement("div");
+                d.className="tool"
+                ide("toolBar").appendChild(d);
+                let img=new Image();
+                img.src="pic/editor/"+m.picture+".png"
+                d.appendChild(img);
+                img.onclick=()=>{this.use()};
+                TOOLS[i]=()=>{this.use()};
+                this.div=d;
+            }
+            use(){
+                UNLOAD_TOOL();
+                LOAD_FUNC=this.load||(()=>{});
+                
+                if(this.modes){
+                    let keys=Object.keys(this.modes);
+                    let m=ide("mode");
+                    let k;
+                    m.onclick=()=>{
+                        keys.push(keys.shift());
+                        k=keys[0];
+                        SKIN_INFO.editor.modes[this.name]=k;
+                        m.innerText=this.modes[k];
+                        LOAD_FUNC=()=>{
+                            if(this.load)this.load(k);
+                        }
+                        LOAD_FUNC();
+                    }
+                    let value=SKIN_INFO.editor.modes[this.name];
+                    let confirmed=false;
+                    if(value){
+                        for(let i of keys){
+                            let o=keys[0];
+                            keys.unshift(keys.pop());
+                            if(o==value){
+                                confirmed=true;
+                                break;
+                            }
+                        }
+                    }
+                    if((!value)||(!confirmed)){
+                        keys.unshift(keys.pop());
+                    }
+                    m.click();
+                }else LOAD_FUNC=this.load||(()=>{});
+                LOAD_FUNC();
+                ide("mode").style.opacity=this.modes?"1":"0";
+                
+                function add(n,f){
+                    draw.addEventListener(n,f);
+                }
+                function touch(fn){
+                    if(!fn)return ()=>{};
+                    return (ev)=>{
+                        ev.preventDefault();
+                        ev=ev.touches?ev.touches[0]||ev.changedTouches[0]:ev;
+                        let obj={
+                            //position
+                            p:(function(){
+                                let pg=[ev.pageX,ev.pageY];
+                                let ps=[draw.offsetLeft,draw.offsetTop];
+                                let sz=[draw.width,draw.height];
+                                let arr=[];
+                                for(let i=0;i<2;i++){
+                                    let m=Math.floor(sz[i]/2+(pg[i]-ps[i])/70);
+                                    arr.push(m);
+                                }
+                                return arr;
+                            })(),
+                            //delta
+                            d:[ev.movementX,ev.movementY],
+                            draw:(color=DRAW_OPT.color)=>{
+                                DRAW_OPT.fn(ctx,obj.p[0],obj.p[1],color);
+                            },
+                            opr:(v)=>{
+                                ctx.globalCompositeOperation=v||"source-over";
+                            }
+                        }
+                        fn(obj,ev);
+                    }
+                }
+                let lastPosition="";
+                let tm=touch((obj,ev)=>{
+                    let p=JSON.stringify(obj.p);
+                    if(lastPosition!=p){
+                        lastPosition=p;
+                        this.move(obj,ev);
+                    }
+                });
+                let ts=this.start?touch(this.start):tm;
+                let te=touch((obj,ev)=>{
+                    if(this.recordStep!==false)recordStep();
+                    if(this.end)this.end(obj,ev);
+                })
+                add("touchstart",ts);
+                add("mousedown",ts);
+                add("touchmove",tm);
+                add("mousemove",tm);
+                add("touchend",te);
+                add("mouseup",te);
+                let disuse=()=>{
+                    if(this.unload)this.unload();
+                    function rmv(n,f){
+                        draw.removeEventListener(n,f);
+                    }
+                    rmv("touchstart",ts);
+                    rmv("mousedown",ts);
+                    rmv("touchmove",tm);
+                    rmv("mousemove",tm);
+                    rmv("touchend",te);
+                    rmv("mouseup",te);
+                }
+                UNLOAD_TOOL=disuse;
+                let t=ide("toolBar").children;
+                if(t)Array.from(t).forEach((e)=>{e.setAttribute("selected","false")})
+                this.div.setAttribute("selected","true");
+            }
+        }
+        
+        //工具
+        let tools={
+            pencil:{
+                picture:"pen",
+                load:()=>{
+                    //useGlobalColor();
+                },
+                move:(obj)=>{
+                    obj.draw();
+                }
+            },
+            erasor:{
+                picture:"eraser",
+                move:(obj)=>{
+                    ctx.clearRect(obj.p[0],obj.p[1],1,1);
+                }
+            },
+            picker:{
+                picture:"picker",
+                move:()=>{},
+                end:(obj)=>{
+                    let d=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
+                    let c=new Color();
+                    c.r=d[0];
+                    c.g=d[1];
+                    c.b=d[2];
+                    c.a=d[3]/256;
+                    DRAW_OPT.obj.color=c;
+                    setPen();
+                    LOAD_FUNC();
+                },
+                unload:()=>{
+                    
+                },
+                recordStep:false
+            },
+            water:{
+                picture:"water",
+                move:(obj)=>{
+                    let c=new Color();
+                    let black=Math.random()>0.5;
+                    c.maprgb(()=>{
+                        return black?0:255;
+                    });
+                    c.a=0.05;
+                    obj.draw(c);
+                },
+                unload:()=>{
+                    useGlobalColor();
+                },
+                modes:{
+                    block:"块",
+                    pen:"画笔"
+                }
+            },
+            lighting:{
+                picture:"lighting",
+                load:(m)=>{
+                    ctx.globalCompositeOperation=m;
+                },
+                unload:()=>{
+                    ctx.globalCompositeOperation="source-over";
+                },
+                move:(obj)=>{
+                    obj.draw()
+                },
+                modes:{
+                    lighter:"加光",
+                    multiply:"吸光"
+                }
+            },
+            discolor:{
+                picture:"discolor",
+                load:()=>{
+                    ctx.globalCompositeOperation="color";
+                },
+                unload:()=>{
+                    ctx.globalCompositeOperation="source-over";
+                },
+                move:(obj)=>{
+                    obj.draw();
+                }
+            },
+            shadow:{
+                picture:"shadow"
+            }
+        }
+        
+        function load_(){
+            draw=ide("draw");
+            ctx=draw.getContext('2d');
+            loadSkin({
+                texture:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAYAAADED76LAAAA/0lEQVQoUx2PPUvDUABFz0viiwQ1Skr9oOKgs0h1d3IQPxa7OYj9AW4O3YSAQXBztnVxslBEHF0dFKG7CkLFKk1BLRkiL3mS3OnAPcO9oh3Ma6UUtm1jGAZxHJOmac6maSIyoTQ1TiZ1ewMsy8Jz7bx8ew8RvXpZJ0lC9B3iuB5ZfvtfjHmTuSzCxrIOux3mVn0+H3yc0QLe4gGvdzUmijOI55NpfXg1QGvN2V6BEbfI7mkbKSX+1hBiu+zo66eI5v4CleMmH60d7h8FlcYLm0vDiPi8pGW1w0+wgVsNUHFMdHmEW7ulf7GC+KvPanOtlV+zpCRRCtOy0Nnwm3X+AeS3Y5f1iZkTAAAAAElFTkSuQmCC",
+                name:"Test",
+                editor:{
+                    modes:{
+                        lighting:"lighter"
+                    }
+                }
+            });
+            for(let i in tools){
+                let m=tools[i];
+                new Tool(m,i);
+            }
+            //加载画笔页面
+            {
+                let cvs=ide("penPreview");
+                let ct=cvs.getContext("2d");
+                ct.globalCompositeOperation="copy";
+                let ipt=Array.from(ide("selectPen").querySelectorAll("[tag]"));
+                ipt.forEach((e,i)=>{
+                    e.addEventListener("change",()=>{
+                        let q=readPen();
+                        ct.fillStyle=q.obj.color.toString();
+                        q.fn(ct,cvs.width/5,cvs.height/3);
+                    });
+                });
+                setPen();
+                penSelected(true);
+            }
+        }
+        
+        function loadSkin(d){
+            SKIN_INFO=d;
+            //alert(JSON.stringify(d))
+            let img=new Image();
+            img.src=d.texture;
+            ide("partName").innerText=d.name;
+            img.onload=()=>{
+                draw.height=img.height;
+                draw.width=img.width;
+                ctx.drawImage(img,0,0);
+                if(d.editor.pen){
+                    setPen(d.editor.pen);
+                    readPen(d.editor.pen);
+                }
+                useGlobalColor();
+                LOAD_FUNC();
+                STEPS=[];
+                REDO_STEPS=[];
+                recordStep();
+                setDoOpa();
+                //TOOLS.pencil();
+            }
+        }
+        
+        function closeWindow(save){
+            HFrame.send({
+                event:"close",
+                save:save?{
+                    code:draw.toDataURL(),
+                    editor:SKIN_INFO.editor
+                }:null
+            })
+        }
+        
+        //画笔数据
+        
+        //读取笔数据
+        function readPen(obj){
+            if(!obj){
+                let ipt=Array.from(ide("selectPen").querySelectorAll("[tag]"));
+                obj={};
+                for(let o of ipt){
+                    let tag=o.getAttribute("tag");
+                    obj[tag]=o.value;
+                }
+                obj.color=new Color({
+                    code:obj.color,
+                    opacity:obj.opacity
+                });
+            }
+            delete obj.opacity;
+            SKIN_INFO.editor.pen=obj;
+            return {
+                fn:(c,x,y,color)=>{
+                    let ra=obj.radius;
+                    if(color)ctx.fillStyle=color.toString()
+                    else ctx.fillStyle=DRAW_OPT.obj.color.toString()
+                    switch(obj.nib){
+                        case "square":
+                            c.fillRect(x-ra,y-ra,ra*2+1,ra*2+1);
+                            break;
+                        case "circle":
+                            c.beginPath();
+                            c.arc(x,y,ra,0,Math.PI*2,true);
+                            c.closePath();
+                            c.fill();
+                            break;
+                        case "radiation":
+                            
+                            break;
+                    }
+                },
+                obj:obj
+            }
+        }
+        //使笔数据设置到UI
+        function setPen(obj){
+            if(!obj)obj=DRAW_OPT.obj;
+            ide("selectColor").style.background=obj.color.toString(true);
+            ide("blackBackground").style.display="none";
+            let ipt=Array.from(ide("selectPen").querySelectorAll("[tag]"));
+            for(let o of ipt){
+                let tag=o.getAttribute("tag");
+                if(o.oninput)o.oninput.call(o);
+                o.value=obj[tag];
+            }
+            DRAW_OPT.obj=obj;
+            SKIN_INFO.editor.pen=obj;
+            useGlobalColor();
+            LOAD_FUNC();
+        }
+        
+        function penSelected(use){
+            ide("blackBackground").style.display="none";
+            if(use){
+                let q=readPen();
+                DRAW_OPT=q;
+                ide("selectColor").style.background=q.obj.color.toString(1);
+                useGlobalColor();
+                LOAD_FUNC();
+            }else{
+                setPen(DRAW_OPT.obj);
+            }
+        }
+        
+        function useGlobalColor(){
+            ide("selectColor").style.background=DRAW_OPT.obj.color.toString(true);
+            ctx.fillStyle=DRAW_OPT.obj.color.toString();
+        }
+        
+        //重做和撤销
+        function undo(){
+            if(STEPS.length<=1)return;
+            REDO_STEPS.push(STEPS.pop());
+            let data=STEPS[STEPS.length-1];
+            ctx.putImageData(data,0,0);
+            setDoOpa();
+        }
+        function redo(){
+            if(!REDO_STEPS.length)return;
+            STEPS.push(REDO_STEPS.pop());
+            let data=STEPS[STEPS.length-1];
+            ctx.putImageData(data,0,0);
+            setDoOpa();
+        }
+        function recordStep(){
+            REDO_STEPS=[];
+            let data=ctx.getImageData(0,0,draw.width,draw.height);
+            STEPS.push(data);
+            if(STEPS.length>50)STEPS.shift();
+            setDoOpa();
+        }
+        function setDoOpa(){
+            ide("undo").style.opacity=STEPS.length>1?"1":"0.5";
+            ide("redo").style.opacity=REDO_STEPS.length>0?"1":"0.5";
+        }
+    </script>
+    
+    <div id="GUI">
+    <div id="headbar">
+        <button onclick="closeWindow()">关闭</button>
+        <div id="partName"></div>
+        <button onclick="closeWindow(true)">保存</button>
+    </div>
+    
+    <div id="top">
+        <img id="undo" class="anima" src="pic/editor/undo.png" onclick="undo()">
+        <img id="redo" class="anima" src="pic/editor/redo.png" onclick="redo()">
+    </div>
+    
+    <button id="mode" class="anima"></button>
+    <div id="under">
+        <div id="colorctnr">
+            <div id="selectColor" onclick="ide('blackBackground').style.display=''"></div>
+        </div>
+        <div id="toolBar">
+            
+        </div>
+    </div>
+    
+    <canvas id="draw"></canvas>
+    </div>
+    
+    <div id="blackBackground" style="display:none">
+    <div id="selectPen">
+        <div style="overflow:scroll;width:100%;height:100%;">
+        <table border="0">
+            <tr>
+                <td>颜色</td>
+                <td>
+                    <input type="color" tag="color">
+                </td>
+            </tr>
+            <tr>
+                <td>不透明度</td>
+                <td>
+                    <input tag="opacity" type="range" min="0" max="100" value="100" oninput="let a=this.parentNode.children[1].innerText=this.value+'%'">
+                    <span withEle="opacity">100%</span>
+                </td>
+            </tr>
+            <tr>
+                <td>半径</td>
+                <td>
+                    <input tag="radius" type="range" min="0" max="5" value="1" oninput="let a=this.parentNode.children[1].innerText=this.value">
+                    <span withEle="radius">1</span>
+                </td>
+            </tr>
+            <tr>
+                <td>笔头</td>
+                <td>
+                    <select tag="nib" value="circle">
+                        <option value="square">方形</option>
+                        <option value="circle">圆形</option>
+                        <option value="radiation">辐射</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td rowspan="2">
+                    <canvas id="penPreview"></canvas>
+                </td>
+            </tr>
+        </table>
+        </div>
+        <div id="aaaa">
+            <a onclick="penSelected(false)">取消</a>
+            <a onclick="penSelected(true)">确定</a>
+        </div>
+    </div>
+    </div>
+  </body>
+</html>

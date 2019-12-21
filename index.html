@@ -1,0 +1,402 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <!--meta name="theme-color" content=""-->
+    <meta content="text/html; charset=utf-8" http-equiv="content-type"/>
+    <meta content="user-scalable=0;" name="viewport" />
+    <title>ShadowSkin</title>
+  </head>
+  <noscript>
+    <mark style="font-size:60px;color:red;">请使用带JavaScript的浏览器！</mark>
+  </noscript>
+  <body onload="load_()//}catch(err){alert(err)}">
+      <!--script src="debugger.js"></script-->
+      <script src="hframe.js" defer></script>
+      <script src="mobs.js"></script>
+      <script src="pic.js"></script>
+    <style>
+    *{
+        font-size:40px;
+    }
+    html,body{
+        height:100%;
+        margin:0;
+        /*background:aliceblue;*/
+    }
+    canvas,img{
+        image-rendering:pixelated;
+    }
+    
+    #GUI{
+        display:grid;
+        grid-template-rows:10% 90%;
+        height:100%;
+        overflow:hidden;
+    }
+    #headbar{
+        display:grid;
+        grid-template-columns:15% 70% 15%;
+        background:greenyellow
+        box-shadow:0px 2px 20px -3px silver;
+        border-bottom:2px solid silver;
+        background:yellowgreen;
+    }
+    jsjsks{
+        border:3px solid black;
+    }
+    #headbar > div{
+        margin:auto;
+        font-size:70px;
+        font-weight:bold;
+        color:white;
+        text-shadow:0px 0px 10px grey;
+    }
+    #headbar > a{
+        display:inline-block;
+        margin:auto;
+        text-align:center;
+        color:dimgrey;
+        /*font-size:40px;*/
+        color:aliceblue;
+        text-shadow:1px 1px 3px grey;
+    }
+    #ctnr{
+        overflow-y:scroll;
+        padding:20px;
+        display:grid;
+        height:100%;
+        grid-auto-rows:30%;
+        grid-template-columns:repeat(3,1fr);
+        grid-row-gap:20px;
+        grid-column-gap:20px
+        border:3px solid black;
+    }
+    s-skin{
+        border-radius:15px 15px;
+        box-shadow:0px 5px 50px -10px silver;
+        background:white;
+        margin:5%;
+        display:grid;
+        /*height:33vh;*/
+        /*grid-template-columns:1fr;*/
+        grid-template-rows:3fr 1fr;
+        overflow:hidden;
+    }
+    [dd=head]{
+        overflow-y:hidden;
+        white-space:nowrap;
+    }
+    s-skin img{
+        margin:auto;
+        image-rendering:pixelated;
+        display:block;
+        /*border:3px solid black;*/
+        height:150%;
+    }
+    [dd=name]{
+        font-size:55px;
+        background:yellowgreen;
+        width:100%;
+        height:100%;
+        text-align:center;
+        color:white;
+        font-weight:bold;
+    }
+    h-frame{
+        background:white;
+    }
+    </style>
+    <script>
+    let ALARMED;
+    let SKINS=[];
+    let ALARM_WHEN_QUIT=false;
+    window.onbeforeunload=(e)=>{
+        if(!ALARM_WHEN_QUIT){
+            
+            return// 222;
+        }
+        return "确实要退出吗？你的工作不会被自动保存"
+    }
+    class Skin extends HTMLElement{
+        constructor(obj,temporary){
+            super();
+            if(!temporary){
+                SKINS.push(this);
+            }
+            /*this._obj=obj;
+            this._model=obj.model;
+            this._texture_=obj.texture;
+            this._name=obj.name;*/
+            
+            this.innerHTML=`
+            <div dd="head">
+                <img dd="headimg">
+            </div>
+            <div dd="name"></div>`
+            let id;
+            function rnd(){
+                return String(Math.random()).slice(8);
+            }
+            this.editor={
+                modes:{}
+            }
+            this.setSkin(obj);
+            this.addEventListener("click",()=>{
+                view(this);
+            });
+        }
+        
+        
+        loadPicture(){
+            let cvs=document.createElement("canvas");
+            let ctx=cvs.getContext("2d");
+            let img=new Image();
+            img.src=this.texture;
+            img.onload=()=>{
+                cvs.width=16;
+                cvs.height=32;
+                let mo=mobs[this.model];
+                for(let i in mo){
+                    let {
+                        size,
+                        uv:[u0,u1],
+                        origin:[o1,o2],
+                        inflate:inf
+                    }=mo[i];
+                    let [x,y,z]=size;
+                    o2+=size[1];
+                    let p=[z+u0,z+u1,x,y];
+                    ctx.drawImage(
+                        img,p[0],p[1],
+                        p[2],p[3],8+o1,
+                        35-o2,p[2],p[3]
+                    );
+                };
+                this.querySelector("[dd=headimg]").src=cvs.toDataURL();
+            }
+        }
+        
+        
+        set name(v){
+            this._name=v;
+            this.querySelector("[dd=name]").innerText=this.name;
+        }
+        get name(){
+            return this._name;
+        }
+        
+        
+        set texture(v){
+            this._texture=v;
+            this.loadPicture();
+        }
+        get texture(){
+            return this._texture;
+        }
+        
+        
+        set model(v){
+            this._model=v;
+            this.loadPicture();
+        }
+        get model(){
+            return this._model;
+        }
+        
+        getInfo(){
+            return {
+                name:this.name,
+                texture:this.texture,
+                model:this.model,
+                editor:this.editor
+            }
+        }
+        
+        setSkin(o){
+            this.name=o.name;
+            this.texture=o.texture;
+            this.model=o.model;
+            this.editor=o.editor||{
+                modes:{}
+            };
+        }
+    }
+    try{
+    customElements.define("s-skin",Skin);
+    //customElements.whenDefined("s-skin").then(load_);
+    }catch(err){alert(err)}
+    
+    function ide(n){
+        return document.getElementById(n);
+    }
+    
+    //处理本地数据
+    function handleData(fn,alarm){
+        if(localStorage){
+            let q=localStorage.getItem("powerskin");
+            try{
+                q=JSON.parse(q);
+            }catch(e){
+                q=[];
+            }
+            q=fn(q)||q;
+            localStorage.setItem("powerskin",JSON.stringify(q));
+            return true;
+        }
+        if(alarm||!ALARMED){
+            alert("您的浏览器不支持localStorage，强烈建议"+
+                "升级浏览器，否则您的一切工作在刷新后将丢失！");
+            ALARMED=true;
+        }
+        return false;
+    }
+    
+    function saveData(){
+        handleData(()=>{
+            return SKINS.map(e=>{
+                let a=e.getInfo();
+                return a;
+            });
+        })
+    }
+    
+    function view(e){
+        let vw=ide("viewer");
+        vw.fullScreen=true;
+        ALARM_WHEN_QUIT=true;
+        let obj={
+            name:e.name,
+            texture:e.texture,
+            model:e.model,
+            editor:e.editor
+        }
+        vw.send(obj);
+        //保存皮肤
+        function recv(d){
+            d=d.detail;
+            switch(d.event){
+                case "close":
+                    if(d.save){
+                        save(d.save);
+                    }
+                    close();
+                    break;
+                case "save":
+                    save(d.save);
+                    break;
+                case "copy":
+                    let info=Object.assign(e.getInfo(),{name:d.name});
+                    setSkin(info,true);
+                    break;
+                case "delete":
+                    SKINS.forEach((el,i)=>{
+                        if(e==el){
+                            SKINS.splice(i,1);
+                            ide("ctnr").removeChild(e);
+                            saveData();
+                            close();
+                        }
+                    })
+                    break;
+            }
+            function save(obj){
+                e.setSkin(d.save);
+                SKINS.forEach((ele,i)=>{
+                    if(ele==e){
+                        SKINS.splice(i,1);
+                        SKINS.unshift(e);
+                    }
+                });
+                let ctnr=ide("ctnr");
+                ctnr.insertBefore(e,ctnr.firstChild);
+                saveData();
+            }
+            function close(){
+                viewer.fullScreen=false;
+                vw.removeEventListener("msg",recv);
+                ALARM_WHEN_QUIT=false;
+            }
+        }
+        vw.addEventListener("msg",recv);
+    }
+    
+    function load_(){
+        /*for(let i=0;i<15;i++){
+            let name=(Math.random()*(10**15)).toString(36).slice(0,8);
+            setSkin({name:name});
+        }*/
+        try{
+        setSkin({
+            name:"creeper",
+            texture:b64sk.raw.creeper,
+            model:"alex"
+        });
+        setSkin({
+            name:"alex",
+            texture:b64sk.raw.alex,
+            model:"alex"
+        });
+        setSkin({
+            name:"steve",
+            texture:b64sk.raw.steve,
+            model:"steve"
+        });
+        handleData((m)=>{
+            for(let i in m){
+                let n=setSkin(m[i]);
+                SKINS.push(n)
+            }
+        });
+        }catch(err){alert(err.stack)}
+    }
+    
+    function importSkin(){
+        let fi=ide("loadSkin");
+        fi.click();
+        fi.onchange=()=>{
+            let fr=new FileReader();
+            fr.onload=()=>{
+                let name=(function(){
+                    let n=fi.value;
+                    n=n.split("\\").pop();
+                    let y=n.split(".");
+                    if(y.length>=2)n=y[y.length-2];
+                    return n.slice(-10);
+                })();
+                setSkin({
+                    name:name,
+                    texture:fr.result,
+                    model:"steve"
+                },true);
+                fi.value=null;
+            }
+            fr.readAsDataURL(fi.files[0]);
+            fr.onerror=(ev)=>{
+                alert("哎唷，读取失败啦！\n"+ev)
+            }
+        }
+    }
+    
+    function setSkin(obj,save){
+        let n=new Skin(obj,!save);
+        ide("ctnr").appendChild(n);
+        if(save){
+            saveData();
+        }
+        return n;
+    }
+    </script>
+    <h-frame id="viewer" style="display:none;background:white;" src="viewer.html"></h-frame>
+    <div id="GUI">
+    <div id="headbar">
+        <a onclick="importSkin()">导入</a>
+        <div>ShadowSkin</div>
+        <a>新建</a>
+    </div>
+    <div id="ctnr"></div>
+    </div>
+    <div style="display:none">
+        <input type="file" id="loadSkin">
+    </div>
+  </body>
+</html>
