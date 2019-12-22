@@ -245,9 +245,21 @@
         
         class Color{
             constructor(str){
-                this.r=0;
-                this.g=0;
-                this.b=0;
+                let arr="rgba".split("");
+                arr.forEach((e)=>{
+                    let va="_"+e;
+                    this[va]=0;
+                    Object.defineProperty(this,e,{
+                        get:()=>{
+                            return this[va];
+                        },
+                        set:(v)=>{
+                            if(typeof v!="number")
+                              throw "Property '"+e+"' must be a number"
+                            this[va]=v;
+                        }
+                    })
+                })
                 this.a=1;
                 this.read.call(this,str);
             }
@@ -264,7 +276,7 @@
                     if(str[0]=="#"&&str.length==7){
                         readColorCode(str);
                     }else if(/^rgba\((?:\d+\,){3}[\d\.]+\)/.test(str)){
-                        let s=str.slice(5,-1).split(",").map(x=>parseInt(x));
+                        let s=str.slice(5,-1).split(",").map(x=>Number(x));
                         this.r=s[0];
                         this.g=s[1];
                         this.b=s[2];
@@ -278,7 +290,7 @@
                         let q=Math.ceil(Math.log(opa)/Math.log(10));
                         opa/=10**q;
                     }
-                    this.a=parseInt(opa.toFixed(4));
+                    this.a=Number(opa.toFixed(4));
                 }else{
                     throw "The given object was not support."
                 }
@@ -623,7 +635,8 @@
                 ctx.drawImage(img,0,0);
                 let pen=d.editor.pen;
                 //alert(JSON.stringify(d).slice(200));
-                setPen(new Pen(pen));
+                pen=new Pen(pen);
+                setPen(pen);
                 
                 STEPS=[];
                 REDO_STEPS=[];
@@ -648,7 +661,7 @@
                 //alert(typeof obj.opacity)
                 obj.color=new Color({
                     code:obj.color,
-                    opacity:parseInt(obj.opacity)
+                    opacity:Number(obj.opacity)
                 });
             }
             obj=new Pen(obj)
@@ -699,7 +712,7 @@
         }
         
         function closeWindow(save){
-            let n=SKIN_INFO.editor
+            let n=SKIN_INFO.editor;
             HFrame.send({
                 event:"close",
                 save:save?{
