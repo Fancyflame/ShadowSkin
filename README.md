@@ -22,7 +22,7 @@ https://fancyflame.github.io/ShadowSkin/</a>
 对，就是您现在在看这篇简介的浏览器
 </li>
 <li>
-上手贼快！我曾经找过我的同学，他精准地猜出了每个按钮的用途
+上手贼快！
 </li>
 </ol>
 </blockquote>
