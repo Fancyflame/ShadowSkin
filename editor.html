@@ -210,11 +210,39 @@
         color:white;
         opacity:0;
     }
+    #hint{
+        color:white;
+        float:left;
+        display:inline-block;
+        margin:5%;
+        position:absolute;
+        border-radius:1em;
+        padding:0.5em;
+        background-color:#777;
+        opacity:0;
+    }
     
     </style>
     <script src="hframe.js"></script>
     <script src="debugger.js"></script>
     <script>
+        let TOOLS={};
+        let STEPS=[];
+        let REDO_STEPS=[];
+        let PEN;
+        let SKIN_INFO={};
+        let LOAD_FUNC=()=>{};
+        let draw;
+        let ctx;
+        let UNLOAD_TOOL=()=>{};
+        function ide(n){
+            return document.getElementById(n);
+        }
+        
+        window.addEventListener("msg",(d)=>{
+            loadSkin(d.detail);
+        });
+        
         class Color{
             constructor(str){
                 this.r=0;
@@ -236,7 +264,7 @@
                     if(str[0]=="#"&&str.length==7){
                         readColorCode(str);
                     }else if(/^rgba\((?:\d+\,){3}[\d\.]+\)/.test(str)){
-                        let s=str.slice(5,-1).split(",");
+                        let s=str.slice(5,-1).split(",").map(x=>parseInt(x));
                         this.r=s[0];
                         this.g=s[1];
                         this.b=s[2];
@@ -255,12 +283,12 @@
                     throw "The given object was not support."
                 }
             }
-            toString(code){
+            getString(code){
                 let arr=[this.r,this.g,this.b,this.a];
                 if(code){
                     arr.pop();
                     let a=arr.map(x=>{
-                        x=x.toString(16).toUpperCase();
+                        x=(x.toString(16)).toUpperCase();
                         return ("00"+x).slice(-2);
                     });
                     return "#"+a.join("");
@@ -268,50 +296,69 @@
                     return "rgba("+arr.join(",")+")";
                 }
             }
+            toString(){
+                return "[Color "+this.getString()+"]"
+            }
             maprgb(fn){
                 let l="rgb".split("");
-                let map=(n)=>{
-                    let m=fn(this[n],n);
+                let map=(n,i)=>{
+                    let m=fn(this[n],i);
                     if((typeof m=="number")&&(!isNaN(m))){
                         this[n]=m;
                     }
                 }
-                l.forEach(e=>void map(e));
+                l.forEach(e=>void map(e,i));
             }
         }
-        let TOOLS={};
-        let STEPS=[];
-        let REDO_STEPS=[];
-        let SKIN_INFO={};
-        let LOAD_FUNC=()=>{};
-        let DRAW_OPT={
-            obj:{
-                color:new Color({
-                    code:"#ff00ff",
-                    opacity:20
-                }),
-                radius:0,
-                nib:"square"
+        class Pen{
+            constructor(obj){
+                let def={
+                    color:new Color(),
+                    radius:0,
+                    nib:"square"
+                };
+                def=Object.assign(def,obj||{});
+                this.color=!(def.color instanceof Color)?
+                  new Color(def.color):def.color;
+                this.radius=def.radius;
+                this.nib=def.nib;
             }
-        };
-        let draw;
-        let ctx;
-        let UNLOAD_TOOL=()=>{};
-        function ide(n){
-            return document.getElementById(n);
+            draw(c,x,y,color=this.color){
+                let ra=this.radius;
+                c.fillStyle=color.getString();
+                switch(this.nib){
+                    case "square":
+                        c.fillRect(x-ra,y-ra,ra*2+1,ra*2+1);
+                        break;
+                    case "circle":
+                        c.beginPath();
+                        c.arc(x,y,ra,0,Math.PI*2,true);
+                        c.closePath();
+                        c.fill();
+                        break;
+                    case "radiation":
+                        break;
+                }
+            }
+            toObject(){
+                let q={
+                    color:this.color.getString(),
+                    nib:this.nib,
+                    radius:this.radius
+                }
+                return q;
+            }
+            toString(){
+                return "[Pen "+JSON.stringify(this.toObject())+"]"
+            }
         }
-        
-        window.addEventListener("msg",(d)=>{
-            loadSkin(d.detail);
-        });
-        
         class Tool{
             constructor(m,i){
                 {
                     let a=this;
                     a=Object.assign(this,m);
                 }
-                m.name=i;
+                this.name=i;
                 let d=document.createElement("div");
                 d.className="tool"
                 ide("toolBar").appendChild(d);
@@ -323,6 +370,11 @@
                 this.div=d;
             }
             use(){
+                if(this.locked){
+                    alert("这个工具还没被开发哦");
+                    return;
+                }
+                hint(this.hint);
                 UNLOAD_TOOL();
                 LOAD_FUNC=this.load||(()=>{});
                 
@@ -382,9 +434,8 @@
                                 return arr;
                             })(),
                             //delta
-                            d:[ev.movementX,ev.movementY],
-                            draw:(color=DRAW_OPT.color)=>{
-                                DRAW_OPT.fn(ctx,obj.p[0],obj.p[1],color);
+                            draw:(color)=>{
+                                PEN.draw(ctx,obj.p[0],obj.p[1],color);
                             },
                             opr:(v)=>{
                                 ctx.globalCompositeOperation=v||"source-over";
@@ -434,6 +485,7 @@
         //工具
         let tools={
             pencil:{
+                hint:"铅笔",
                 picture:"pen",
                 load:()=>{
                     //useGlobalColor();
@@ -443,12 +495,14 @@
                 }
             },
             erasor:{
+                hint:"橡皮擦",
                 picture:"eraser",
                 move:(obj)=>{
                     ctx.clearRect(obj.p[0],obj.p[1],1,1);
                 }
             },
             picker:{
+                hint:"吸色器",
                 picture:"picker",
                 move:()=>{},
                 end:(obj)=>{
@@ -458,9 +512,8 @@
                     c.g=d[1];
                     c.b=d[2];
                     c.a=d[3]/256;
-                    DRAW_OPT.obj.color=c;
+                    PEN.color=c;
                     setPen();
-                    LOAD_FUNC();
                 },
                 unload:()=>{
                     
@@ -468,6 +521,7 @@
                 recordStep:false
             },
             water:{
+                hint:"水渍",
                 picture:"water",
                 move:(obj)=>{
                     let c=new Color();
@@ -487,6 +541,7 @@
                 }
             },
             lighting:{
+                hint:"光照",
                 picture:"lighting",
                 load:(m)=>{
                     ctx.globalCompositeOperation=m;
@@ -503,6 +558,7 @@
                 }
             },
             discolor:{
+                hint:"改色",
                 picture:"discolor",
                 load:()=>{
                     ctx.globalCompositeOperation="color";
@@ -515,6 +571,8 @@
                 }
             },
             shadow:{
+                hint:"阴影",
+                locked:true,
                 picture:"shadow"
             }
         }
@@ -544,10 +602,11 @@
                 ipt.forEach((e,i)=>{
                     e.addEventListener("change",()=>{
                         let q=readPen();
-                        ct.fillStyle=q.obj.color.toString();
-                        q.fn(ct,cvs.width/5,cvs.height/3);
+                        ct.fillStyle=q.color.getString();
+                        q.draw(ct,cvs.width/5,cvs.height/3);
                     });
                 });
+                PEN=new Pen();
                 setPen();
                 penSelected(true);
             }
@@ -563,32 +622,15 @@
                 draw.width=img.width;
                 ctx.drawImage(img,0,0);
                 let pen=d.editor.pen;
-                //alert(JSON.stringify(d.editor.pen))
-                if(pen){
-                    setPen(pen);
-                    readPen(pen);
-                }
-                useGlobalColor();
-                LOAD_FUNC();
+                //alert(JSON.stringify(d).slice(200));
+                setPen(new Pen(pen));
+                
                 STEPS=[];
                 REDO_STEPS=[];
                 recordStep();
                 setDoOpa();
                 //TOOLS.pencil();
             }
-        }
-        
-        function closeWindow(save){
-            let n=SKIN_INFO.editor;
-            n=Object.assign({pen:{}},n);
-            n.pen.color=DRAW_OPT.obj.color.toString();
-            HFrame.send({
-                event:"close",
-                save:save?{
-                    code:draw.toDataURL(),
-                    editor:n
-                }:null
-            })
         }
         
         //画笔数据
@@ -603,50 +645,36 @@
                     let tag=o.getAttribute("tag");
                     obj[tag]=o.value;
                 }
+                //alert(typeof obj.opacity)
                 obj.color=new Color({
                     code:obj.color,
-                    opacity:obj.opacity
+                    opacity:parseInt(obj.opacity)
                 });
             }
-            delete obj.opacity;
-            SKIN_INFO.editor.pen=obj;
-            return {
-                fn:(c,x,y,color)=>{
-                    let ra=obj.radius;
-                    if(color)ctx.fillStyle=color.toString()
-                    else ctx.fillStyle=DRAW_OPT.obj.color.toString()
-                    switch(obj.nib){
-                        case "square":
-                            c.fillRect(x-ra,y-ra,ra*2+1,ra*2+1);
-                            break;
-                        case "circle":
-                            c.beginPath();
-                            c.arc(x,y,ra,0,Math.PI*2,true);
-                            c.closePath();
-                            c.fill();
-                            break;
-                        case "radiation":
-                            
-                            break;
-                    }
-                },
-                obj:obj
-            }
+            obj=new Pen(obj)
+            return obj;
         }
         //使笔数据设置到UI
         function setPen(obj){
             //obj是一个完整的pen设置
-            if(!obj)obj=DRAW_OPT.obj;
-            ide("selectColor").style.background=obj.color.toString(true);
+            if(!obj)obj=PEN;
+            if(!obj instanceof Pen)throw "parameter 1 must be a Pen";
+            ide("selectColor").style.background=obj.color.getString(true);
             ide("blackBackground").style.display="none";
             let ipt=Array.from(ide("selectPen").querySelectorAll("[tag]"));
             for(let o of ipt){
                 let tag=o.getAttribute("tag");
                 if(o.oninput)o.oninput.call(o);
-                o.value=obj[tag];
+                if(tag=="opacity"){
+                    o.value=obj.color.a*100;
+                }else if(tag=="color"){
+                    o.value=obj.color.getString(true);
+                    //alert(obj+"\n"+obj.color.getString(true))
+                }else  o.value=obj[tag];
             }
-            DRAW_OPT.obj=obj;
-            SKIN_INFO.editor.pen=obj;
+            PEN=obj;
+            SKIN_INFO.editor.pen=obj.toObject();
+            //alert(JSON.stringify(SKIN_INFO.editor));
             useGlobalColor();
             LOAD_FUNC();
         }
@@ -655,30 +683,63 @@
             ide("blackBackground").style.display="none";
             if(use){
                 let q=readPen();
-                DRAW_OPT=q;
-                ide("selectColor").style.background=q.obj.color.toString(1);
+                PEN=q;
+                SKIN_INFO.editor.pen=q.toObject();
+                ide("selectColor").style.background=q.color.getString(1);
                 useGlobalColor();
                 LOAD_FUNC();
             }else{
-                setPen(DRAW_OPT.obj);
+                setPen(PEN);
             }
         }
         
         function useGlobalColor(){
-            ide("selectColor").style.background=DRAW_OPT.obj.color.toString(true);
-            ctx.fillStyle=DRAW_OPT.obj.color.toString();
+            ide("selectColor").style.background=PEN.color.getString(true);
+            ctx.fillStyle=PEN.color.getString();
+        }
+        
+        function closeWindow(save){
+            let n=SKIN_INFO.editor
+            HFrame.send({
+                event:"close",
+                save:save?{
+                    code:draw.toDataURL(),
+                    editor:n
+                }:null
+            })
+        }
+        //提示
+        let HINT_TIMER;
+        function hint(s){
+            if(HINT_TIMER)clearTimeout(HINT_TIMER);
+            let h=ide("hint");
+            h.innerText=s.length>15?s.slice(0,15)+"...":s;
+            let st=h.style;
+            st.opacity="1";
+            st.transition="opacity 0s";
+            HINT_TIMER=setTimeout(function(){
+                st.opacity="0";
+                st.transition="opacity 1s";
+                HINT_TIMER=null;
+            },1000);
         }
         
         //重做和撤销
         function undo(){
-            if(STEPS.length<=1)return;
+            if(STEPS.length<=1){
+                hint("没有可撤销的步骤了！");
+                return;
+            }
             REDO_STEPS.push(STEPS.pop());
             let data=STEPS[STEPS.length-1];
             ctx.putImageData(data,0,0);
             setDoOpa();
         }
         function redo(){
-            if(!REDO_STEPS.length)return;
+            if(!REDO_STEPS.length){
+                hint("已经不能重做啦！");
+                return;
+            }
             STEPS.push(REDO_STEPS.pop());
             let data=STEPS[STEPS.length-1];
             ctx.putImageData(data,0,0);
@@ -704,6 +765,7 @@
         <button onclick="closeWindow(true)">保存</button>
     </div>
     
+    <h3 id="hint">Hello</h3>
     <div id="top">
         <img id="undo" class="anima" src="pic/editor/undo.png" onclick="undo()">
         <img id="redo" class="anima" src="pic/editor/redo.png" onclick="redo()">
@@ -712,7 +774,7 @@
     <button id="mode" class="anima"></button>
     <div id="under">
         <div id="colorctnr">
-            <div id="selectColor" onclick="ide('blackBackground').style.display=''"></div>
+            <div id="selectColor" onclick="setPen();ide('blackBackground').style.display=''"></div>
         </div>
         <div id="toolBar">
             
