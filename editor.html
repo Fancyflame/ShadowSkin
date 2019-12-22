@@ -278,7 +278,7 @@
                         let q=Math.ceil(Math.log(opa)/Math.log(10));
                         opa/=10**q;
                     }
-                    this.a=opa.toFixed(4);
+                    this.a=parseInt(opa.toFixed(4));
                 }else{
                     throw "The given object was not support."
                 }
