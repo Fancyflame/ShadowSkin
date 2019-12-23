@@ -9,6 +9,10 @@ https://fancyflame.github.io/ShadowSkin/</a>
 <p style="background-color:yellow;">
 欢迎各位尽情找bug，找到后记得发给我或者给个issue
 </p>
+<blockquote>
+There is no English version for this editor yet,
+because it still under development.
+</blockquote>
 <h3>为什么选择ShadowSkin？</h3>
 <blockquote>
 <ol>
