@@ -5,7 +5,7 @@
 2019.12.22
 <ol>
 <li>添加了工具说明</li>
-<li>不会再弹出opa.toFixed错误</li>
+<li>修复了更改透明度为0时弹出opa.toFixed错误</li>
 </ol>
 </blockquote>
 
