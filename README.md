@@ -6,9 +6,9 @@ https://fancyflame.github.io/ShadowSkin/</a>
 一个网页端的皮肤制作器，不过它仅限于手机版，
 因为电脑版的已经足够强大了。你不需要输入任何的代码，我（目前只有我）已经为你考虑好了。
 </p>
-<mark>
+<p style="background-color:yellow;">
 欢迎各位尽情找bug，找到后记得发给我或者给个issue
-</mark>
+</p>
 <h3>为什么选择ShadowSkin？</h3>
 <blockquote>
 <ol>
