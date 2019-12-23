@@ -8,7 +8,7 @@ https://fancyflame.github.io/ShadowSkin/</a>
 </p>
 <p style="background-color:yellow;">
 欢迎各位尽情找bug，找到后记得发给我或者给个issue
-<a href="/UPDATE.md">查看更新日志</a>
+<br>点击<a href="/UPDATES.md">这里</a>查看更新日志
 </p>
 <blockquote>
 There is no English version for this editor yet,
