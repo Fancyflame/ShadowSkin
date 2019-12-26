@@ -323,20 +323,20 @@
         }
         class Pen{
             constructor(obj){
-                /*let def={
-                    color:new Color(),
-                    radius:0,
-                    nib:"square"
-                };*/
-                //测试用
                 let def={
+                    color:new Color(),
+                    radius:1,
+                    nib:"square"
+                };
+                //测试用
+                /*let def={
                     color:new Color({
                         code:"#ff0000",
                         opacity:1
                     }),
                     radius:3,
                     nib:"radiation"
-                }
+                }*/
                 def=Object.assign(def,obj||{});
                 this.color=!(def.color instanceof Color)?
                   new Color(def.color):def.color;
