@@ -25,7 +25,7 @@
     <script src="blocks.js"></script>
     <script src="hframe.js" defer></script>
     <script src="rotateModel.js"></script>
-    <!--script src="debugger.js"></script-->
+    <script src="debugger.js"></script>
       <script>
       let SKIN_CANVAS;
       let SKIN_INFO={
@@ -93,13 +93,11 @@
             cvs.height=img.height;
             let ctx=cvs.getContext('2d');
             ctx.drawImage(img,0,0);
+            //let imgdata=ctx.getImageData(0,0,img.width,img.height);
             
             GENDER=f=="steve";
             changeArm();
-             ide("skinname").innerText=skinname;
-            CUBESET.forEach((e,i)=>{
-                e.texture=img;
-            });
+            ide("skinname").innerText=skinname;
             SKIN_INFO_BACKUP=JSON.stringify(d);
         
             //恢复默认
@@ -110,6 +108,9 @@
                 clo.click();
             }
         }
+        CUBESET.forEach((e,i)=>{
+            e.texture=skin;
+        });
     })
     
     function hasEditedSkin(ch){
@@ -274,10 +275,21 @@
         let e=ide("editor");
         e.fullScreen=true;
         let face=SELECTED[1];
-        let faces=SELECTED[0].faces;
+        let picture=(function(){
+            let cvs=document.createElement("canvas");
+            let ctx=cvs.getContext('2d');
+            let d=SKIN_CANVAS.getContext("2d").getImageData(
+                face.uv[0],face.uv[1],
+                face.size[0],face.size[1]
+            );
+            cvs.width=d.width;
+            cvs.height=d.height;
+            ctx.putImageData(d,0,0);
+            return cvs.toDataURL();
+        })();
         let texture;
         e.send({
-            texture:face.texture,
+            texture:picture,
             name:face.name,
             editor:SKIN_INFO.editor
         });
@@ -290,7 +302,6 @@
                         let img=new Image();
                         img.src=d.save.code;
                         face.style.background="url("+d.save.code+")";
-                        face.texture=d.save.code;
                         SKIN_INFO.editor=d.save.editor;
                         img.onload=()=>{
                             let uv=face.uv;

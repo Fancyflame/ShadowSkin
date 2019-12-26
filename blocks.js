@@ -39,6 +39,7 @@ const blocky = {
             s.position = "absolute";
             s["box-sizing"] = "border-box";
             s["transform-style"] = "preserve-3d";
+            s["background-repeat"]="no-repeat";
             return e;
         }
         let cube=(function(){
@@ -65,29 +66,11 @@ const blocky = {
             set:(texture)=>{
             if(!texture)return;
             let uv=this.uv;
+            let [x,y,z]=this.size;
             if(!uv)throw "Cannot set texture before set UVs"
-            if (typeof texture == "string") {
-                let img = new Image();
-                img.src = texture;
-                img.onload = () => {
-                    this.texture=img;
-                }
-                img.onerror = (err) => {
-                    throw "Invalid URL";
-                }
-                return;
+            if (typeof texture!="string") {
+                texture=URL.createObjectURL(new Blob([texture]));
             }
-            let canvas = document.createElement("canvas");
-            let tur = canvas.getContext("2d");
-            canvas.width = texture.width;
-            canvas.height = texture.height;
-            let [x, y, z] = this.size;
-            tur.drawImage(
-                texture,
-                uv[0], uv[1],
-                2 * (z + x), z + y,
-                0, 0, 2 * (z + x), z + y
-            );
             let posi = {
                 //fromX,fromY,width,height
                 front: [z, z, x, y],
@@ -99,19 +82,13 @@ const blocky = {
             }
             let workCanvas = document.createElement("canvas");
             for (let i in posi) {
-                let ctx = workCanvas.getContext("2d");
-                let o = posi[i];
-                o = tur.getImageData(o[0], o[1], o[2], o[3]);
-                workCanvas.width = o.width;
-                workCanvas.height = o.height;
-                //重设宽高后已经清除了画布
-                ctx.putImageData(o, 0, 0);
-                
                 let cu=cube[i];
-                let dataUrl=workCanvas.toDataURL();
-                cu.style.background = 'url('+dataUrl+')';
-                cu.texture=dataUrl;
-                cu.uv=uv.map((e,ind)=>e+posi[i][ind]);
+                let po=posi[i];
+                let s=cu.style;
+                s["background-image"] = "url('"+texture+"')";
+                s["background-position"]=(-uv[0]-po[0])+"px "+(-uv[1]-po[1])+"px";
+        
+                cu.uv=uv.map((e,ind)=>e+po[ind]);
             }
             _texture=texture;
         },
@@ -148,7 +125,7 @@ const blocky = {
                     let s=q.style;
                     s.width=t[2][0]+"px";
                     s.height=t[2][1]+"px";
-                    s.size=t[2];
+                    q.size=t[2];
                 }
                 _size=v;
             }
