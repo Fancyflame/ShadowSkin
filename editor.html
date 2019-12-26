@@ -10,7 +10,6 @@
     <mark style="font-size:60px;color:red;">请使用带JavaScript的浏览器！</mark>
   </noscript>
   <body onload="load_()">
-      <!--script src="debugger.js"></script-->
     <style>
       *{
           /*color:white;*/
@@ -319,16 +318,25 @@
                         this[n]=m;
                     }
                 }
-                l.forEach(e=>void map(e,i));
+                l.forEach(map);
             }
         }
         class Pen{
             constructor(obj){
-                let def={
+                /*let def={
                     color:new Color(),
                     radius:0,
                     nib:"square"
-                };
+                };*/
+                //测试用
+                let def={
+                    color:new Color({
+                        code:"#ff0000",
+                        opacity:1
+                    }),
+                    radius:3,
+                    nib:"radiation"
+                }
                 def=Object.assign(def,obj||{});
                 this.color=!(def.color instanceof Color)?
                   new Color(def.color):def.color;
@@ -336,19 +344,26 @@
                 this.nib=def.nib;
             }
             draw(c,x,y,color=this.color){
+                color=Object.assign(new Color(),color);
                 let ra=this.radius;
                 c.fillStyle=color.getString();
                 switch(this.nib){
                     case "square":
-                        c.fillRect(x-ra,y-ra,ra*2+1,ra*2+1);
+                        c.fillRect(x-ra+1,y-ra+1,ra*2-1,ra*2-1);
                         break;
                     case "circle":
                         c.beginPath();
                         c.arc(x,y,ra,0,Math.PI*2,true);
-                        c.closePath();
                         c.fill();
+                        c.closePath();
                         break;
                     case "radiation":
+                        let gra=c.createRadialGradient(x,y,ra,x,y,0);
+                        gra.addColorStop(1,color.getString());
+                        color.a=0;
+                        gra.addColorStop(0,color.getString());
+                        c.fillStyle=gra;
+                        c.fillRect(x-ra+1,y-ra+1,ra*2-1,ra*2-1);
                         break;
                 }
             }
@@ -428,6 +443,7 @@
                     draw.addEventListener(n,f);
                 }
                 function touch(fn){
+                    draw.focus();
                     if(!fn)return ()=>{};
                     return (ev)=>{
                         ev.preventDefault();
@@ -661,8 +677,9 @@
                 //alert(typeof obj.opacity)
                 obj.color=new Color({
                     code:obj.color,
-                    opacity:Number(obj.opacity)
+                    opacity:Number(obj.opacity)/100
                 });
+                //alert(obj.color.a)
             }
             obj=new Pen(obj)
             return obj;
@@ -817,7 +834,7 @@
             <tr>
                 <td>半径</td>
                 <td>
-                    <input tag="radius" type="range" min="0" max="5" value="1" oninput="let a=this.parentNode.children[1].innerText=this.value">
+                    <input tag="radius" type="range" min="1" max="5" value="1" oninput="let a=this.parentNode.children[1].innerText=this.value">
                     <span withEle="radius">1</span>
                 </td>
             </tr>
