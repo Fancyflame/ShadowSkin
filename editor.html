@@ -237,7 +237,7 @@
         flex-direction:column-reverse;
         justify-content:center;
         width:12vw;
-        height:0%;
+        height:50%;
         top:50%;
         transform:translateY(-50%);
         position:absolute;
@@ -789,17 +789,20 @@
             let json=q.toJSON();
             for(let o of Array.from(pens.children)){
                 if(o.pen.toJSON()==json){
+                    hint("已置顶");
                     pens.appendChild(o);
                     return;
                 }
             }
+            hint("已添加");
             let div=document.createElement("div");
             pens.appendChild(div);
             div.pen=q;
             let s=div.style;
             s["background-color"]=q.color.getString("true");
-            div.onclick=()=>{
+            div.onclick=(ev)=>{
                 setPen(q);
+                ev.cancelBubble=true;
             }
             
             let del=ide("deletePen").style;
