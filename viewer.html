@@ -133,21 +133,6 @@
     function selectEdit(cube,face){
           face.cancelBubble=true;
           if(SELECTED){
-              /*let btn=ide("editSkin");
-              face.style["box-shadow"]="0px 0px 1px 0.2px yellow";
-              cube.forEachFace((e)=>{
-                  if(e!=face)e.style.opacity="0.2"
-              });
-              btn.innerText="编辑:"+BONE_NAMES.dire[cube.findName(face)]
-              btn.style.display="";
-              face.onblur=()=>{
-                face.onblur="";
-                face.style["box-shadow"]="";
-                btn.style.display="none";
-                cube.forEachFace((e)=>{
-                    e.style.opacity="";
-                })
-              }*/
               SELECTED[1]=face;
               edit();
           }else{
@@ -184,12 +169,13 @@
             let q=CUBESET.children[n];
             q.size=[a.size[0],a.size[1],a.size[2]];
             q.uv=a.uv;
-            q[SELECTED?"Position":"position"]=a.origin.map((e,ind)=>{
+            q.Position=a.origin.map((e,ind)=>{
                 //e*=10;
                 e+=a.size[ind]/2;
                 if(ind==1)e*=-1;
                 return e;
             });
+            if(!SELECTED)q.position=q.Position;
             q.texture=q.texture;
         }
         foo("leftArm");
@@ -297,12 +283,12 @@
                         let ctx=SKIN_CANVAS.getContext('2d');
                         let img=new Image();
                         img.src=d.save.code;
-                        face.style.background="url("+d.save.code+")";
                         SKIN_INFO.editor=d.save.editor;
                         img.onload=()=>{
                             let uv=face.uv;
                             ctx.clearRect(uv[0],uv[1],img.width,img.height);
                             ctx.drawImage(img,uv[0],uv[1]);
+                            SELECTED[0].texture=SKIN_CANVAS.toDataURL();
                             EDITED_TEXTURE=true;
                         }
                     }
@@ -314,7 +300,7 @@
     
     
     function load_(){
-        //载入新皮肤
+        //第一次载入皮肤
         {
             let setSize=function(){
                 window.removeEventListener("msg",setSize);
@@ -362,13 +348,11 @@
             c.IsClothes=Boolean(inflate);
             //恢复原样时
             c.Reset=()=>{
-                if(c.Position)origin=c.Position
-                c.position=origin;
+                c.position=c.Position||origin;
                 c.scale=inflate?1.1:1;
                 let sc=c.IsClothes?(SHOWCLO?"":"none"):"";
                 c.element.style.display=sc;
                 c.Viewing=false;
-                c.Position=null;
             }
             //选中编辑时
             c.View=()=>{
