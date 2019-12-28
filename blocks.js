@@ -68,8 +68,9 @@ const blocky = {
             let uv=this.uv;
             let [x,y,z]=this.size;
             if(!uv)throw "Cannot set texture before set UVs"
-            if (typeof texture!="string") {
-                texture=URL.createObjectURL(new Blob([texture]));
+            if (typeof texture!="string"){
+                throw "Please use url rather than picture";
+                //texture=URL.createObjectURL(new Blob([texture]));
             }
             let posi = {
                 //fromX,fromY,width,height
