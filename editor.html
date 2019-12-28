@@ -221,6 +221,42 @@
         opacity:0;
     }
     
+    #pens{
+        right:0;
+        border-top-left-radius:1em;
+        border-bottom-left-radius:1em;
+    }
+    #templatePens{
+        left:0;
+        border-top-right-radius:1em;
+        border-bottom-right-radius:1em;
+    }
+    .pens{
+        background-color:#777;
+        display:flex;
+        flex-direction:column-reverse;
+        justify-content:center;
+        width:12vw;
+        height:50%;
+        top:50%;
+        transform:translateY(-50%);
+        position:absolute;
+        overflow:scroll;
+    }
+    .pens div{
+        margin:1vh auto;
+        width:8vw;
+        height:8vw;
+        background:blue;
+        box-sizing:border-box;
+        border-radius:0.1em;
+        flex:0 0 auto;
+        transition:all 0.1s;
+    }
+    #pens div:active{
+        transform:scale(1.1,1.1);
+    }
+    
     </style>
     <script src="hframe.js"></script>
     <script src="debugger.js"></script>
@@ -367,16 +403,20 @@
                         break;
                 }
             }
-            toObject(){
+            toJSON(){
                 let q={
                     color:this.color.getString(),
                     nib:this.nib,
                     radius:this.radius
                 }
-                return q;
+                return JSON.stringify(q);
             }
             toString(){
-                return "[Pen "+JSON.stringify(this.toObject())+"]"
+                return "[Pen "+this.toJSON()+"]"
+            }
+            clone(){
+                let pen=Object.assign(new Pen(),this);
+                return pen;
             }
         }
         class Tool{
@@ -413,6 +453,7 @@
                         keys.push(keys.shift());
                         k=keys[0];
                         SKIN_INFO.editor.modes[this.name]=k;
+                        this.mode=k;
                         m.innerText=this.modes[k];
                         LOAD_FUNC=()=>{
                             if(this.load)this.load(k);
@@ -539,9 +580,10 @@
                     c.r=d[0];
                     c.g=d[1];
                     c.b=d[2];
-                    c.a=d[3]/256;
-                    PEN.color=c;
-                    setPen();
+                    c.a=d[3]/255;
+                    let pen=PEN.clone();
+                    pen.color=c;
+                    addPenToList(pen);
                 },
                 unload:()=>{
                     
@@ -572,13 +614,17 @@
                 hint:"光照",
                 picture:"lighting",
                 load:(m)=>{
-                    ctx.globalCompositeOperation=m;
+                    if(m!="darker")ctx.globalCompositeOperation=m;
                 },
                 unload:()=>{
                     ctx.globalCompositeOperation="source-over";
                 },
-                move:(obj)=>{
-                    obj.draw()
+                move:function(obj){
+                    let c=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
+                    let color=new Color();
+                    color.maprgb((e,i)=>this.mode=="lighter"?0xff:0);
+                    color.a=PEN.color.a/4;
+                    obj.draw(color);
                 },
                 modes:{
                     lighter:"加光",
@@ -614,7 +660,9 @@
                 editor:{
                     modes:{
                         lighting:"lighter"
-                    }
+                    },
+                    templPens:[],
+                    pen:null
                 }
             });
             for(let i in tools){
@@ -630,8 +678,8 @@
                 ipt.forEach((e,i)=>{
                     e.addEventListener("change",()=>{
                         let q=readPen();
-                        ct.fillStyle=q.color.getString();
-                        q.draw(ct,cvs.width/5,cvs.height/3);
+                        q.radius*=10;
+                        q.draw(ct,cvs.width/2,cvs.height/2);
                     });
                 });
                 PEN=new Pen();
@@ -640,11 +688,16 @@
             }
         }
         
+        //载入皮肤
         function loadSkin(d){
             SKIN_INFO=d;
             let img=new Image();
             img.src=d.texture;
             ide("partName").innerText=d.name;
+            d.editor=Object.assign({
+                modes:{},
+                templPens:[]
+            },d.editor);
             img.onload=()=>{
                 draw.height=img.height;
                 draw.width=img.width;
@@ -653,13 +706,17 @@
                 //alert(JSON.stringify(d).slice(200));
                 pen=new Pen(pen);
                 setPen(pen);
-                
-                STEPS=[];
-                REDO_STEPS=[];
-                recordStep();
-                setDoOpa();
                 //TOOLS.pencil();
             }
+            ide("pens").innerHTML="";
+            STEPS=[];
+            REDO_STEPS=[];
+            recordStep();
+            setDoOpa();
+            d.editor.templPens.forEach((e,i)=>{
+                e=new Pen(e);
+                addPenToList(e,true);
+            })
         }
         
         //画笔数据
@@ -702,22 +759,65 @@
                     //alert(obj+"\n"+obj.color.getString(true))
                 }else  o.value=obj[tag];
             }
-            PEN=obj;
-            SKIN_INFO.editor.pen=obj.toObject();
+            PEN=obj;""
+            SKIN_INFO.editor.pen=JSON.parse(obj.toJSON());
             //alert(JSON.stringify(SKIN_INFO.editor));
             useGlobalColor();
             LOAD_FUNC();
         }
         
+        function addPenToList(q,istemplate){
+            let pens=ide(istemplate?"templatePens":"pens");
+            let json=q.toJSON();
+            for(let o of Array.from(pens.children)){
+                if(o.pen.toJSON()==json){
+                    pens.appendChild(o);
+                    return;
+                }
+            }
+            let div=document.createElement("div");
+            pens.appendChild(div);
+            div.pen=q;
+            let s=div.style;
+            s["background-color"]=q.color.getString("true");
+            div.onclick=()=>{
+                setPen(q);
+            }
+            
+            div.draggable=true;
+            div.ondragstart=(event)=>{
+                event.dataTransfer.setData("Text",q.toJSON())
+            }
+            div.ondragover=(ev)=>{
+                ev.preventDefault();
+            }
+        }
+        
+        //拖动放置的笔
+        function addPenAsTemplate(ev,save){
+            let p=ev.dataTransfer.getData("Text");
+            addPenToList(new Pen(JSON.parse(p)),true);
+            
+            let arr=SKIN_INFO.editor.templPens;
+            arr.forEach((e,i)=>{
+                if(e==p){
+                    arr.splice(i,1);
+                }
+            });
+            arr.push(JSON.parse(p));
+        }
+        
+        //选择笔完成
         function penSelected(use){
             ide("blackBackground").style.display="none";
             if(use){
                 let q=readPen();
                 PEN=q;
-                SKIN_INFO.editor.pen=q.toObject();
+                SKIN_INFO.editor.pen=q.toJSON();
                 ide("selectColor").style.background=q.color.getString(1);
                 useGlobalColor();
                 LOAD_FUNC();
+                addPenToList(q);
             }else{
                 setPen(PEN);
             }
@@ -794,6 +894,14 @@
         <div id="partName"></div>
         <button onclick="closeWindow(true)">保存</button>
     </div>
+    
+    <div id="pens" class="pens" onclick="hint('历史记录画笔')"></div>
+    <div id="templatePens" 
+        ondrop="addPenAsTemplate(event)"
+        ondragover="event.preventDefault();"
+        class="pens"
+        onclick="hint('模板画笔')"
+    ></div>
     
     <h3 id="hint">Hello</h3>
     <div id="top">
