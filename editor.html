@@ -256,6 +256,20 @@
     #pens div:active{
         transform:scale(1.1,1.1);
     }
+    #deletePen{
+        position:absolute;
+        top:0;
+        background:linear-gradient(to bottom,red,red,transparent);
+        width:100%;
+        height:10vh;
+        line-height:10vh;
+        font-size:1.4em;
+        color:white;
+        text-align:center;
+        transition:all 0.1s;
+        opacity:0.8;
+        display:none;
+    }
     
     </style>
     <script src="hframe.js"></script>
@@ -359,6 +373,7 @@
         }
         class Pen{
             constructor(obj){
+                if(typeof obj=="string")obj=JSON.parse(obj);
                 let def={
                     color:new Color(),
                     radius:1,
@@ -706,13 +721,13 @@
                 //alert(JSON.stringify(d).slice(200));
                 pen=new Pen(pen);
                 setPen(pen);
+                STEPS=[];
+                REDO_STEPS=[];
+                recordStep();
+                setDoOpa();
                 //TOOLS.pencil();
             }
             ide("pens").innerHTML="";
-            STEPS=[];
-            REDO_STEPS=[];
-            recordStep();
-            setDoOpa();
             d.editor.templPens.forEach((e,i)=>{
                 e=new Pen(e);
                 addPenToList(e,true);
@@ -766,6 +781,9 @@
             LOAD_FUNC();
         }
         
+        //拖拽画笔
+        
+        //添加画笔
         function addPenToList(q,istemplate){
             let pens=ide(istemplate?"templatePens":"pens");
             let json=q.toJSON();
@@ -784,19 +802,28 @@
                 setPen(q);
             }
             
+            let del=ide("deletePen").style;
             div.draggable=true;
             div.ondragstart=(event)=>{
-                event.dataTransfer.setData("Text",q.toJSON())
+                del.display="block";
+                del.opacity="0.8";
+                event.dataTransfer.setData("Text",JSON.stringify({
+                    pen:q.toJSON(),
+                    from:event.target.parentNode.id
+                }));
+            }
+            div.ondragend=()=>{
+                del.display="none";
             }
             div.ondragover=(ev)=>{
                 ev.preventDefault();
             }
         }
         
-        //拖动放置的笔
+        //添加拖动放置的笔
         function addPenAsTemplate(ev,save){
             let p=ev.dataTransfer.getData("Text");
-            addPenToList(new Pen(JSON.parse(p)),true);
+            addPenToList(new Pen(JSON.parse(p).pen),true);
             
             let arr=SKIN_INFO.editor.templPens;
             arr.forEach((e,i)=>{
@@ -804,7 +831,26 @@
                     arr.splice(i,1);
                 }
             });
-            arr.push(JSON.parse(p));
+            arr.push(JSON.parse(p).pen);
+        }
+        
+        function removePenFromList(ev){
+            let data=JSON.parse(ev.dataTransfer.getData("Text"));
+            if(data.from=="templatePens"){
+                if(!confirm("确定删除该画笔吗？"))return;
+                let tem=SKIN_INFO.editor.templPens;
+                tem.forEach((e,i)=>{
+                    if(e==data.pen||JSON.stringify(e)==data.pen){
+                        tem.splice(i,1);
+                    }
+                })
+            }
+            let par=ide(data.from);
+            Array.from(par.children).forEach((e,i)=>{
+                if(e.pen.toJSON()==data.pen){
+                    par.removeChild(e);
+                }
+            });
         }
         
         //选择笔完成
@@ -895,13 +941,22 @@
         <button onclick="closeWindow(true)">保存</button>
     </div>
     
-    <div id="pens" class="pens" onclick="hint('历史记录画笔')"></div>
+    
+    <div id="deletePen"
+        ondragover="event.preventDefault();this.style.opacity=1;"
+        ondragleave="this.style.opacity=0.8"
+        ondrop="removePenFromList(event)"
+    >删除</div>
+    <div id="pens" class="pens"
+        onclick="hint('历史记录画笔')"
+    ></div>
     <div id="templatePens" 
+        class="pens"
         ondrop="addPenAsTemplate(event)"
         ondragover="event.preventDefault();"
-        class="pens"
         onclick="hint('模板画笔')"
     ></div>
+    
     
     <h3 id="hint">Hello</h3>
     <div id="top">
