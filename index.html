@@ -28,79 +28,85 @@
     }
     
     #GUI{
-        display:grid;
-        grid-template-rows:10% 90%;
+        display:flex;
+        flex-flow:column nowrap;
         height:100%;
+        width:100%;
         overflow:hidden;
     }
     #headbar{
-        display:grid;
-        grid-template-columns:15% 70% 15%;
-        background:greenyellow
+        flex:8 0px;
+        text-align:center;
+        background:greenyellow;
         box-shadow:0px 2px 20px -3px silver;
         border-bottom:2px solid silver;
         background:yellowgreen;
+        text-align:center;
+        font-size:2em;
+        font-weight:bold;
+        color:white;
+        text-shadow:0px 0px 10px grey;
+        line-height:8vh;
     }
     jsjsks{
         border:3px solid black;
     }
-    #headbar > div{
-        margin:auto;
-        font-size:70px;
-        font-weight:bold;
-        color:white;
-        text-shadow:0px 0px 10px grey;
-    }
-    #headbar > a{
-        display:inline-block;
-        margin:auto;
+    #toolbar{
+        flex:4 0px;
+        width:100%;
+        display:flex;
         text-align:center;
-        color:dimgrey;
-        /*font-size:40px;*/
-        color:aliceblue;
-        text-shadow:1px 1px 3px grey;
+        padding:0.5em;
+    }
+    #toolbar > a{
+        /*border-right:0.3em solid yellowgreen;*/
+        flex:1 1 0;
+        color:yellowgreen;
     }
     #ctnr{
+        flex:100 0px;
         overflow-y:scroll;
-        padding:20px;
-        display:grid;
-        height:100%;
-        grid-auto-rows:30%;
-        grid-template-columns:repeat(3,1fr);
-        grid-row-gap:20px;
-        grid-column-gap:20px
-        border:3px solid black;
+        padding:2vh 2vw;
+        display:flex;
+        flex-flow:row wrap;
+        justify-content:center;
+        
     }
     s-skin{
         border-radius:15px 15px;
         box-shadow:0px 5px 50px -10px silver;
         background:white;
-        margin:5%;
-        display:grid;
-        /*height:33vh;*/
-        /*grid-template-columns:1fr;*/
-        grid-template-rows:3fr 1fr;
+        display:inline-flex;
+        flex-direction:column;
+        justify-content:stretch;
+        height:30%;
         overflow:hidden;
-    }
-    [dd=head]{
-        overflow-y:hidden;
-        white-space:nowrap;
+        margin:1.5% 1.5%;
+        flex:0 0 30%;
     }
     s-skin img{
         margin:auto;
         image-rendering:pixelated;
         display:block;
-        /*border:3px solid black;*/
         height:150%;
+        box-sizing:border-box;
+    }
+    [dd=head]{
+        width:100%;
+        overflow:hidden;
+        white-space:nowrap;
+        flex:3 0px;
     }
     [dd=name]{
-        font-size:55px;
+        line-height:2em;
+        flex:1 0px;
+        font-size:1.3em;
         background:yellowgreen;
         width:100%;
-        height:100%;
         text-align:center;
         color:white;
         font-weight:bold;
+        text-overflow:ellipsis;
     }
     h-frame{
         background:white;
@@ -112,8 +118,7 @@
     let ALARM_WHEN_QUIT=false;
     window.onbeforeunload=(e)=>{
         if(!ALARM_WHEN_QUIT){
-            
-            return// 222;
+            return;
         }
         return "确实要退出吗？你的工作不会被自动保存"
     }
@@ -327,18 +332,18 @@
             setSkin({name:name});
         }*/
         try{
-        /*setSkin({
+        if(b64sk.raw.creeper)setSkin({
             name:"creeper",
             texture:b64sk.raw.creeper,
             model:"alex"
-        });*/
+        });
         setSkin({
-            name:"请复制使用",
+            name:"alex",
             texture:b64sk.raw.alex,
             model:"alex"
         });
         setSkin({
-            name:"请复制使用",
+            name:"steve",
             texture:b64sk.raw.steve,
             model:"steve"
         });
@@ -404,9 +409,11 @@
     </script>
     <h-frame id="viewer" style="display:none;background:white;" src="viewer.html"></h-frame>
     <div id="GUI">
-    <div id="headbar">
+    <div id="headbar">ShadowSkin</div>
+    <div id="toolbar">
         <a onclick="importSkin()">导入</a>
-        <div>ShadowSkin</div>
+        <a href="tutorial.html" target="_blank">教程</a>
+        <a target="_blank" href="https://github.com/Fancyflame/ShadowSkin">github</a>
         <a onclick="createSkin()">新建</a>
     </div>
     <div id="ctnr"></div>

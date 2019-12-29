@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <!--meta name="theme-color" content=""-->
+    <meta content="text/html; charset=utf-8" http-equiv="content-type"/>                                                     
+    <!--meta content="user-scalable=0;" name="viewport" /-->
+    <title>ShadowSkin - Tutorial</title>
+  </head>
+  <body onload="load_()">
+    <style>
+    html,body{
+        height:100%;
+        margin:0;
+        padding-left:5vw;
+        padding-right:5vw;
+        background-color:#f5ffed;
+    }
+    *{
+        font-size:100%;
+        color:#040;
+    }
+    blockquote{
+        border-left:0.4em solid yellowgreen;
+        padding:0 0.4em;
+    }
+    mark{
+        border-radius:0.1em;
+        background:yellowgreen;
+        padding:0.2em;
+        font-weight:bold;
+    }
+    hint{
+        padding-left:1em;
+        border-left:0.4em solid goldenrod;
+        background-color:#ff9;
+        margin-top:3em;
+        display:block;
+    }
+    hint,hint *{
+        color:#660;
+    }
+    h1,h2,h3{
+        text-align:center;
+        font-size:400%;
+        border-left:0.4em solid yellowgreen;
+        background:linear-gradient(to right,yellowgreen,transparent 50%);
+    }
+    a,ul,ol{
+        color:yellowgreen;
+    }
+    p,blockquote,hint{
+        font-size:2em;
+    }
+    img{
+        margin:4em 0;
+        display:block;
+        width:100%;
+        box-shadow:0 0 5em -2em dimgrey;
+    }
+    #penblock{
+        border-radius:3vw;
+        width:50vw;
+        height:50vw;
+        background-color:blue;
+        text-align:center;
+        font-size:12vw;
+        line-height:25vw;
+        color:white;
+        transition:all .6s;
+        margin:auto;
+    }
+    #penblock:hover{
+        background-color:deepskyblue;
+        color:#555;
+    }
+    </style>
+    <h1>ShadowSkin教程</h1>
+    <blockquote>
+        这是ShadowSkin的新手教程。然而，ShadowSkin的用法非常简单，
+        你大可不必观看教程即可开始您的第一个项目。本文仅提示
+        难以理解的相关操作
+        <br><br>
+        <u>编辑器页面在后续版本里还会继续更新，那教程总不能
+        更新一下换一次吧。那就凑合一下咯！</u>
+    </blockquote>
+    <h3>目录</h3>
+    <ol>
+        <li><a href="#summary">概述</a></li>
+        <li><a href="#index">管理界面</a></li>
+        <li><a href="#viewer">视图界面</a></li>
+        <li><a href="#editor">编辑界面</a></li>
+        <li><a href="#end">结束</a></li>
+    </ol>
+    <h3 id="summary">概述</h3>
+    <blockquote>
+        ShadowSkin是一个基于HTML的关于Minecraft的皮肤编辑器。<br>
+        如果您不知道Minecraft是啥，那我也不知道你下载了这玩意做什么用QAQ
+        <br><br>
+        ShadowSkin开发的目的就是在移动客户端上搭建一个轻量级的
+        皮肤编辑器。<br>它有<b>加光，色相，水渍等工具；三种笔头，可调半径等
+        </b>画笔设置。它的预览您将会在编辑页面章节看到
+        <br><u>
+        <br>作者：FancyFlame
+        <br>没有用任何非原创类库</u>
+        <br><mark>如果有BUG或者好的建议，请发到我邮箱
+        fancyflame@163.com或者在github提个issue。谢谢!</mark>
+    </blockquote>
+    
+    <h3 id="index">管理页面</h3>
+    <blockquote>
+        这是一个图例，不是瞎子都能看得懂<br>
+        主页面操作很少，重命名等操作尽在视图界面
+    </blockquote>
+    <img src="pic/tutorial/index_screenshot.jpg">
+    
+    <h3 id="viewer">视图界面</h3>
+    <blockquote>
+        视图界面操作比较多，一张图解释不过来<br>
+        多来几张拼凑一下。
+    </blockquote>
+    <img src="pic/tutorial/viewer_1.jpg">
+    <img src="pic/tutorial/viewer_2.jpg">
+    <img src="pic/tutorial/viewer_3.jpg">
+    
+    <h3 id="editor">编辑界面</h3>
+    <blockquote>
+        编辑页面是比较难懂的，这张图是基本操作
+    </blockquote>
+    <img src="pic/tutorial/editor_1.jpg">
+    <blockquote>
+        你一定注意到了这个家伙吧？<br>
+        接下来我们会解释它
+    </blockquote>
+    <div id="penblock">C3<br>36</div>
+    <blockquote>
+        这定义了一个画笔。
+        每次保存新画笔时都会在历史记录画笔里添加一个对应画笔。
+        点击它们来使用。<br>
+        <ul>
+            <li>它的背景颜色对应它的颜色</li>
+            <li>
+                C3代表半径为3的圆形笔
+                <ul>
+                    <li>S:square - 方形笔</li>
+                    <li>C:circle - 圆形笔</li>
+                    <li>R:radiation - 辐射笔</li>
+                </ul>
+            </li>
+            <li>36是它的不透明度，即36%，接近透明</li>
+        </ul>
+        例如：R1 100就是一个半径为1且不透明的辐射笔<br><br>
+        <b>拖动</b>历史记录画笔里的画笔到<b>模板画笔</b>里，
+        使它能够被保存，否则在您下次编辑的时候
+        它们就会被清除
+    </blockquote>
+    <img src="pic/tutorial/editor_pen_1.jpg">
+    <img src="pic/tutorial/editor_pen_2.jpg">
+    
+    <h3 id="end">结束</h3>
+    <blockquote>
+        那么，教程到这里就结束了。如果还有不懂<br>
+        那只能怪你理解力不好咯！
+    </blockquote>
+  </body>
+</html>

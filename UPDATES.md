@@ -1,6 +1,16 @@
 <h1>更新日志</h1>
 <a href="README.md">返回README</a>
 <h2>2019.12.23开始记录</h2>
+<h3>1.0.0 build5</h3>
+<blockquote>
+2019.12.29
+<ol>
+<li>重置主页面布局方式与设计，兼容性提高</li>
+<li>添加了教程</li>
+<li>添加了缩略画笔信息(详见教程)</li>
+</ol>
+</blockquote>
+
 <h3>1.0.0 build4</h3>
 <blockquote>
 2019.12.28
