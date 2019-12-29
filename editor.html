@@ -634,21 +634,41 @@
                 hint:"光照",
                 picture:"lighting",
                 load:(m)=>{
-                    if(m!="darker")ctx.globalCompositeOperation=m;
+                    ctx.globalCompositeOperation="soft-light";
                 },
                 unload:()=>{
                     ctx.globalCompositeOperation="source-over";
                 },
                 move:function(obj){
-                    let c=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
-                    let color=new Color();
-                    color.maprgb((e,i)=>c[i])//this.mode=="saturation"?0xff:0);
-                    color.a=PEN.color.a/4;
-                    obj.draw(color);
+                    let pixel=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
+                    let c=new Color();
+                    //c.maprgb((e,i)=>pixel[i]);
+                    c.maprgb((e,i)=>this.mode=="add"?0xff:0);
+                    c.a=PEN.color.a/4;
+                    /*//调整饱和度到满
+                    if(this.mode=="lighter"){
+                    
+                        let max=Math.max(Math.max(c.r,c.g),c.b);
+                        let min=Math.min(Math.min(c.r,c.g),c.b);
+                        let delta=(max-min)/0xff;
+                        if(delta!=0){
+                            let value=(max+min)/0xff
+                            let L=value/2;
+                            let S=L<0.5?delta/value:delta/(2-value);
+                            //这里目的是让percent小于0，就一种情况
+                            //并且percent+S<1;
+                            alpha=2;
+                            alpha=1/(alpha-1);
+                            c.maprgb(x=>x+(x-L*0xff)*alpha);
+                        }
+                    }else{
+                        c.maprgb(x=>0x30);
+                    }*/
+                    obj.draw(c);
                 },
                 modes:{
-                    lighter:"加光",
-                    multiply:"吸光"
+                    "add":"加光",
+                    "minus":"吸光"
                 }
             },
             discolor:{
