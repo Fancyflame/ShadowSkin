@@ -73,6 +73,14 @@
         background-color:deepskyblue;
         color:#555;
     }
+    table{
+        font-size:1.6em;
+        box-shadow:0 0 4em -2em dimgrey;
+        border-collapse: collapse;
+        color:green;
+        table-layout:fixed;
+        width:100%;
+    }
     </style>
     <h1>ShadowSkin教程</h1>
     <blockquote>
@@ -155,7 +163,55 @@
     </blockquote>
     <img src="pic/tutorial/editor_pen_1.jpg">
     <img src="pic/tutorial/editor_pen_2.jpg">
-    
+        <table border="2">
+            <captain>工具的用法</captain>
+            <tr>
+                <th>工具</th>
+                <th>释义</th>
+                <th>属性</th>
+            </tr>
+            <tr>
+                <td>画笔</td>
+                <td>绘制图案</td>
+                <td>通过修改画笔数据更改</td>
+            </tr>
+            <tr>
+                <td>橡皮擦</td>
+                <td>只能使用单块擦除，因为minecraft不支持半透明</td>
+                <td>不可更改，只能用块</td>
+            </tr>
+            <tr>
+                <td>吸色器</td>
+                <td>
+                    提取当前部位的颜色到画笔，但保留上一次画笔的
+                    半径，笔头形状
+                </td>
+                <td>不可更改</td>
+            </tr>
+            <tr>
+                <td>水渍</td>
+                <td>随机添加减少明度</td>
+                <td>通过选择模式和画笔更改水渍范围，但不能调颜色</td>
+            </tr>
+            <tr>
+                <td>光照</td>
+                <td>
+                    局部光影调节
+                    <ul>
+                        <li>加光：颜色叠加产生曝光效果</li>
+                        <li>吸光：颜色相乘产生暗部效果</li>
+                    </ul>
+                </td>
+                <td>
+                    除了颜色外，其它都使用画笔属性
+                </td>
+            </tr>
+            <tr>
+                <td>改色</td>
+                <td>修改色相</td>
+                <td>使用画笔的颜色替换绘制部位的颜色</td>
+            </tr>
+        </table>
     <h3 id="end">结束</h3>
     <blockquote>
         那么，教程到这里就结束了。如果还有不懂<br>
