@@ -1,6 +1,16 @@
 <h1>更新日志</h1>
 <a href="README.md">返回README</a>
 <h2>2019.12.23开始记录</h2>
+
+<h3>1.0.0 build6</h3>
+<blockquote>
+2019.12.30
+<ol>
+<li>将光照修改为颜色加深减淡效果</li>
+<li>添加导出导入工程选项</li>
+</ol>
+</blockquote>
+
 <h3>1.0.0 build5</h3>
 <blockquote>
 2019.12.29

@@ -477,16 +477,22 @@
             })
         }
     }
-    function skindownload(){
+    function skindownload(proj){
         if(hasEditedSkin()){
             if(!confirm("将保存当前更改并下载皮肤"))return;
             skinsave();
         }
-        let da=getSkinInfo().texture;
-        da=da.slice(da.indexOf(",")+1);
-        da="data:application/octet-stream;base64,"+da;
+        let da;
+        if(proj){
+            da=JSON.stringify(getSkinInfo());
+            da=URL.createObjectURL(new Blob([da],{type:"application/octet-stream"}));
+        }else{
+            da=getSkinInfo().texture;
+            da=da.slice(da.indexOf(",")+1);
+            da="data:application/octet-stream;base64,"+da;
+        }
         let a=ide("a");
-        a.download=SKIN_INFO.name+".png";
+        a.download=SKIN_INFO.name+(proj?".json":".png");
         a.href=da;
         a.click();
     }
@@ -606,6 +612,7 @@
       
       <div id="rightbar">
           <button id="skinsave" onclick="skinsave()" class="circle" color="dodgerblue" selected="true">保存</button>
+          <button id="skinoutput" onclick="skindownload(true)" class="circle" color="dodgerblue" selected="false">导出</button>
           <button id="skindownload" onclick="skindownload()" class="circle" color="dodgerblue" selected="false">下载</button>
           <button id="skincopy" onclick="skincopy()" class="circle" color="dodgerblue" selected="false">复制</button>
           <button id="skindelete" onclick="skindelete()" class="circle" color="red" selected="false">删除</button>

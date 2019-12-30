@@ -634,7 +634,7 @@
                 hint:"光照",
                 picture:"lighting",
                 load:(m)=>{
-                    ctx.globalCompositeOperation="soft-light";
+                    ctx.globalCompositeOperation=m;
                 },
                 unload:()=>{
                     ctx.globalCompositeOperation="source-over";
@@ -642,12 +642,12 @@
                 move:function(obj){
                     let pixel=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
                     let c=new Color();
-                    //c.maprgb((e,i)=>pixel[i]);
-                    c.maprgb((e,i)=>this.mode=="add"?0xff:0);
+                    c.maprgb((e,i)=>pixel[i]);
+                    //c.maprgb((e,i)=>this.mode=="color-dodge"?0xff:0);
                     c.a=PEN.color.a/4;
-                    /*//调整饱和度到满
-                    if(this.mode=="lighter"){
-                    
+                    //调整饱和度到满
+                    //if(this.mode=="lighter"){
+                    {
                         let max=Math.max(Math.max(c.r,c.g),c.b);
                         let min=Math.min(Math.min(c.r,c.g),c.b);
                         let delta=(max-min)/0xff;
@@ -661,14 +661,14 @@
                             alpha=1/(alpha-1);
                             c.maprgb(x=>x+(x-L*0xff)*alpha);
                         }
-                    }else{
+                    }/*else{
                         c.maprgb(x=>0x30);
                     }*/
                     obj.draw(c);
                 },
                 modes:{
-                    "add":"加光",
-                    "minus":"吸光"
+                    "color-dodge":"减淡",
+                    "color-burn":"加深"
                 }
             },
             discolor:{

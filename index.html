@@ -107,13 +107,33 @@
         color:white;
         font-weight:bold;
         text-overflow:ellipsis;
-        white-space:nowrap;
-        overflow-x:scroll;
     }
     h-frame{
         background:white;
     }
     </style>
+    <script>
+        //测试可用
+        window.addEventListener("load",()=>{
+        try{
+            let m=[
+                customElements,
+                HFrame,
+                window.postMessage,
+                localStorage
+            ]
+            for(let i of m){
+                if(!i){
+                    alert("浏览器兼容性不足，无法正常使用，请换浏览器！");
+                    break;
+                }
+            }
+        }catch(err){
+            alert("浏览器兼容性不足，无法正常使用，请换浏览器！"
+                +"错误信息\n"+err);
+        }
+        })
+    </script>
     <script>
     let ALARMED;
     let SKINS=[];
@@ -363,6 +383,17 @@
         fi.click();
         fi.onchange=()=>{
             let fr=new FileReader();
+            let isproj=fi.value.split(".").pop()=="json";
+            if(isproj){
+                fr.onload=()=>{
+                    let obj=JSON.parse(fr.result);
+                    let n=setSkin(obj);
+                    SKINS.push(n);
+                    saveData();
+                }
+                fr.readAsText(fi.files[0])
+            }else{
+                
             fr.onload=()=>{
                 let name=(function(){
                     let n=fi.value;
@@ -382,6 +413,8 @@
             fr.onerror=(ev)=>{
                 alert("哎唷，读取失败啦！\n"+ev)
             }
+        }
+        
         }
     }
     

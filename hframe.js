@@ -25,10 +25,13 @@ class HFrame extends HTMLElement{
         try{
         //事件：msg,connect
         super();
+        this._fullScreen=false;
+        this._style="";
         let ifr=this.iframe=document.createElement("iframe");
         this.window=null;
         this.appendChild(ifr);
         ifr.style="width:100%;height:100%;border:none;margin:0;";
+        //ifr.sandbox="allow-same-origin allow-top-navigation allow-forms allow-scripts";
         window.addEventListener("message",(message)=>{
             let {data,source}=message;
             if(source!=ifr.contentWindow){
@@ -44,10 +47,6 @@ class HFrame extends HTMLElement{
         
         ifr.addEventListener("load",()=>{
             this.window=null;
-        });
-        this.addEventListener("load",()=>{
-            alert("sss")
-            let x=this.src=this.getAttribute("src");
         });
         this.src=this.getAttribute("src")||"";
         }catch(err){alert(err)}
@@ -65,7 +64,6 @@ class HFrame extends HTMLElement{
         return this.iframe.src;
     }
     
-    _fullScreen=false;
     set fullScreen(v){
         v=Boolean(v);
         if(v==this._fullScreen)return;
@@ -90,7 +88,6 @@ class HFrame extends HTMLElement{
         return this._fullScreen;
     }
     
-    _style="";
     set style(v){
         if(this._fullScreen)
             throw "Only cancel the full screen mode can you set style";
