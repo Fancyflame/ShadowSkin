@@ -2,6 +2,14 @@
 <a href="README.md">返回README</a>
 <h2>2019.12.23开始记录</h2>
 
+<h3>1.0.0 build7</h3>
+<blockquote>
+2019.12.30
+<ol>
+<li>用户自定义光照颜色</li>
+</ol>
+</blockquote>
+
 <h3>1.0.0 build6</h3>
 <blockquote>
 2019.12.30
