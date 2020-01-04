@@ -14,13 +14,6 @@ https://fancyflame.github.io/ShadowSkin/</a>
 There is no English version for this editor yet,
 because it still under development.
 </blockquote>
-<h3>1.0.0 build4</h3>
-<blockquote>
-2019.12.30
-<ol>
-<li></li>
-</ol>
-</blockquote>
 
 <h3>为什么选择ShadowSkin？</h3>
 <blockquote>
