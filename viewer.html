@@ -23,6 +23,9 @@
     <script src="rotateModel.js"></script>
     <!--script src="debugger.js"></script-->
       <script>
+      "use strict";
+      let REDO_STEPS=[];
+      let STEPS=[];
       let SKIN_CANVAS;
       let SKIN_INFO={
           name:"creeper",
@@ -103,6 +106,11 @@
                 clo.setAttribute("selected","true");
                 clo.click();
             }
+            
+            REDO_STEPS=[];
+            STEPS=[];
+            recordStep();
+            hasEditedSkin(false);
         }
         CUBESET.forEach((e,i)=>{
             e.texture=skin;
@@ -290,6 +298,7 @@
                             ctx.drawImage(img,uv[0],uv[1]);
                             SELECTED[0].texture=SKIN_CANVAS.toDataURL();
                             EDITED_TEXTURE=true;
+                            recordStep();
                         }
                     }
                     e.fullScreen=false;
@@ -496,8 +505,49 @@
         a.href=da;
         a.click();
     }
+        
+        //重做和撤销
+        function undo(){
+            if(STEPS.length<=1){
+                //hint("没有可撤销的步骤了！");
+                return;
+            }
+            let old=STEPS.pop();
+            REDO_STEPS.push(old);
+            let data=STEPS[STEPS.length-1];
+            SKIN_CANVAS.getContext('2d').putImageData(data[0],0,0);
+            old[1].texture=SKIN_CANVAS.toDataURL();
+            setDoOpa();
+        }
+        function redo(){
+            if(!REDO_STEPS.length){
+                //hint("已经不能重做啦！");
+                return;
+            }
+            let old=REDO_STEPS.pop();
+            STEPS.push(old);
+            let data=STEPS[STEPS.length-1];
+            SKIN_CANVAS.getContext('2d').putImageData(data[0],0,0);
+            old[1].texture=SKIN_CANVAS.toDataURL();
+            setDoOpa();
+        }
+        function recordStep(step){
+            REDO_STEPS=[];
+            let cvs=SKIN_CANVAS;
+            let data=cvs.getContext('2d').getImageData(0,0,cvs.width,cvs.height);
+            STEPS.push([data,SELECTED?SELECTED[0]:99]);
+            if(STEPS.length>50)STEPS.shift();
+            setDoOpa();
+        }
+        function setDoOpa(){
+            ide("undo").style.opacity=STEPS.length>1?"1":"0.3";
+            ide("redo").style.opacity=REDO_STEPS.length>0?"1":"0.3";
+        }
     </script>
     <style>
+    .anima{
+        transition:all 0.1s;
+    }
       *{
           outline:none;
           font-size:30px;
@@ -595,6 +645,17 @@
       #editor{
           display:none;
       }
+      
+    #top{
+        display:flex;
+        width:100%;
+        height:7vh;
+        justify-content:flex-start;
+    }
+    #top img{
+        height:100%;
+        display:block;
+    }
     </style>
     <div id="headbar">
         <a style="color:red" onclick="goback(false)">返回</a>
@@ -602,6 +663,10 @@
         <a style="color:dodgerblue" onclick="goback(true)">保存</a>
     </div>
     <div id="camera" tabindex="10" >
+    <div id="top">
+        <img id="undo" class="anima" src="pic/viewer/undo.png" onclick="undo()">
+        <img id="redo" class="anima" src="pic/viewer/redo.png" onclick="redo()">
+    </div>
       <button id="editSkin" style="display:none" onmousedown="edit(event)">EDIT</button>
       <div id="scene" tabindex="1"></div>
       

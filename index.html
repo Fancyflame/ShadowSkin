@@ -25,6 +25,7 @@
     }
     canvas,img{
         image-rendering:pixelated;
+        image-rendering:crisp-edges;
     }
     
     #GUI{
@@ -71,6 +72,10 @@
         flex-flow:row wrap;
         justify-content:center;
         align-content:flex-start;
+    }
+    #ctnr::after{
+        content:'';
+        flex:auto;
     }
     s-skin{
         border-radius:15px 15px;

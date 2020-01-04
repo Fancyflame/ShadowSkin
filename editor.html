@@ -25,17 +25,20 @@
         background:dimgrey;
         position:relative;
       }
-      #draw{
+      #draw,#layer{
           image-rendering:pixelated;
-          transform:scale(70,70);
+          image-rendering:crisp-edges;
           position:absolute;
           top:50%;
           left:50%;
+          transform:translate(-50%,-50%)scale(70,70);
           box-shadow:0px 0px 0.2px 0.2px #444;
-          margin:auto;
           display:block;
           border:none;
-          background:linear-gradient(30deg,#fff,#333,#fff,#333,#fff,#333);
+          background:repeating-linear-gradient(30deg,#fff 20%,#333 40%,#fff 60%);
+      }
+      #draw{
+          background-image:repeating-linear-gradient(37deg,#fff 10%,#333 20%,#fff 30%);
       }
     #headbar{
         color:white;
@@ -143,7 +146,8 @@
     }
     
     img{
-        image-rendering:pixelated;
+        image-rendering:crisp-edges;
+        -ms-interpolation-mode:nearest-neighbor;
     }
     /*工具栏*/
     
@@ -170,16 +174,17 @@
         display:block;
     }
     #toolBar{
+        height:10vh;
         flex-grow:1;
-        width:0;
+        width:100%;
         overflow-x:scroll;
         white-space:nowrap;
         overflow-y:hidden;
+        align-content:flex-start;
     }
     .tool{
         /*border-radius:15px;*/
         display:inline-block;
-        width:15vw;
         height:15vw;
         margin:auto 10px;
         overflow:hidden;
@@ -187,7 +192,7 @@
         box-sizing:content-box;
     }
     .tool>:first-child{
-        width:100%;
+        /*width:100%;*/
         height:100%;
         border:none;
     }
@@ -283,11 +288,12 @@
         let TOOLS={};
         let STEPS=[];
         let REDO_STEPS=[];
-        let PEN;
+        let PEN;//主要笔
         let SKIN_INFO={};
         let LOAD_FUNC=()=>{};
-        let draw;
-        let ctx;
+        let OFFSCREEN_CANVAS=document.createElement("canvas");
+        let draw;//canvas
+        let ctx;//canvas的context
         let UNLOAD_TOOL=()=>{};
         function ide(n){
             return document.getElementById(n);
@@ -310,6 +316,13 @@
                         set:(v)=>{
                             if(typeof v!="number")
                               throw "Property '"+e+"' must be a number"
+                            if(e!="a"){
+                                if(v>0xff)v=0xff;
+                                if(v<0)v=0;
+                                v=Math.round(v);
+                            }else{
+                                if(v>1||v<0)throw "alpha must in range from 0 to 1"
+                            }
                             this[va]=v;
                         }
                     })
@@ -375,6 +388,61 @@
                 }
                 l.forEach(map);
             }
+            clone(){
+                return Object.assign(new Color(),this);
+            }
+            toHSL(){
+                let {r,g,b}=this;
+                r/=0xff;
+                g/=0xff;
+                b/=0xff;
+                let max=Math.max(Math.max(r,g),b);
+                let min=Math.min(Math.min(r,g),b);
+                let l=(max+min)/2;
+                
+                let s;
+                let h;
+                if(max==min){
+                    h=s=0;
+                }else{
+                    s=l<0.5?(max-min)/(max+min):(max-min)/(2-max-min);
+                    let deg=(max-min);
+                    if(r==max)h=(g-b)/deg;
+                    if(g==max)h=2+(b-r)/deg;
+                    if(b==max)h=4+(r-g)/deg;
+                    h*=60;
+                    if(h<0)h+=360;
+                }
+                return [h,s,l].map(x=>Number(x.toFixed(3)));
+            }
+            toHSV(){
+                let {r,g,b}=this;
+                let h,s,v;
+                r/=0xff;
+                g/=0xff;
+                b/=0xff;
+                let max=Math.max(Math.max(r,g),b);
+                let min=Math.min(Math.min(r,g),b);
+                
+                let diff=max-min;
+                if(r==max)h=(g-b)/diff;
+                if(g==max)h=2+(b-r)/diff;
+                if(b==max)h=4+(r-g)/diff;
+                h*=60;
+                if(h<0)h+=360;
+                v=max;
+                s=(max-min)/max;
+                return [h,s,v].map(x=>Number(x.toFixed(3)));
+            }
+            static readHSL(h,s,l){
+                let c=new Color();
+                if(s==0){
+                    c.maprgb(x=>l);
+                    return c;
+                }
+                
+                let max=Math.max()
+            }
         }
         class Pen{
             constructor(obj){
@@ -400,7 +468,8 @@
                 this.nib=def.nib;
             }
             draw(c,x,y,color=this.color){
-                color=Object.assign(new Color(),color);
+                let alpha=color.a;
+                color=color.clone();
                 let ra=this.radius;
                 c.fillStyle=color.getString();
                 switch(this.nib){
@@ -422,6 +491,9 @@
                         c.fillRect(x-ra+1,y-ra+1,ra*2-1,ra*2-1);
                         break;
                 }
+            }
+            drawWithFilter(fn){
+                
             }
             toJSON(){
                 let q={
@@ -571,7 +643,7 @@
             }
         }
         
-        //工具
+//工具
         let tools={
             pencil:{
                 hint:"铅笔",
@@ -595,12 +667,11 @@
                 picture:"picker",
                 move:()=>{},
                 end:(obj)=>{
+                    if(obj.p[0]<0||obj.p[1]<0||obj.p[0]>draw.width||obj.p[1]>draw.height)return;
                     let d=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
                     let c=new Color();
-                    c.r=d[0];
-                    c.g=d[1];
-                    c.b=d[2];
-                    c.a=d[3]/255;
+                    c.maprgb((e,i)=>d[i]);
+                    c.a=d[3]/0xff;
                     let pen=PEN.clone();
                     pen.color=c;
                     addPenToList(pen);
@@ -640,14 +711,24 @@
                     ctx.globalCompositeOperation="source-over";
                 },
                 move:function(obj){
-                    let pixel=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
+                    /*let pixel=ctx.getImageData(obj.p[0],obj.p[1],1,1).data;
                     let c=new Color();
                     c.maprgb((e,i)=>pixel[i]);
-                    //c.maprgb((e,i)=>this.mode=="color-dodge"?0xff:0);
-                    c.a=PEN.color.a/4;
+                    let max=Math.max(Math.max(c.r,c.g),c.b);
+                    let min=Math.min(Math.min(c.r,c.g),c.b);
+                    c.maprgb(x=>{
+                        if(x==min)x=0
+                        else if(x==max)x=255;
+                        else x=Math.round((x-min)/(max+min)*255);
+                        x+=0x5f*(this.mode=="lighter"?1:-1);
+                        return x;
+                    })*/
+                    let c=PEN.color.clone();
+                    //c.maprgb((e)=>(this.mode=="lighter")?0xff:0);
+                    c.a/=4;
                     //调整饱和度到满
                     //if(this.mode=="lighter"){
-                    {
+                    /*{
                         let max=Math.max(Math.max(c.r,c.g),c.b);
                         let min=Math.min(Math.min(c.r,c.g),c.b);
                         let delta=(max-min)/0xff;
@@ -657,7 +738,7 @@
                             let S=L<0.5?delta/value:delta/(2-value);
                             //这里目的是让percent小于0，就一种情况
                             //并且percent+S<1;
-                            alpha=2;
+                            let alpha=2;
                             alpha=1/(alpha-1);
                             c.maprgb(x=>x+(x-L*0xff)*alpha);
                         }
@@ -667,8 +748,8 @@
                     obj.draw(c);
                 },
                 modes:{
-                    "color-dodge":"减淡",
-                    "color-burn":"加深"
+                    "color-dodge":"增亮",
+                    "color-burn":"减暗"
                 }
             },
             discolor:{
@@ -728,7 +809,7 @@
             }
         }
         
-        //载入皮肤
+//载入皮肤
         function loadSkin(d){
             SKIN_INFO=d;
             let img=new Image();
@@ -832,7 +913,7 @@
             
             let del=ide("deletePen").style;
             div.innerText=q.nib.slice(0,1).toUpperCase()+
-              q.radius+"\n"+(q.color.a*100);
+              q.radius+"\n"+parseInt(q.color.a*100);
             let useLightFont=q.color.r+q.color.g+q.color.b<3*0x9f;
             s.color=useLightFont?"white":"#555";
             div.draggable=true;
@@ -850,6 +931,7 @@
             div.ondragover=(ev)=>{
                 ev.preventDefault();
             }
+            div.click();
         }
         
         //添加拖动放置的笔
@@ -963,6 +1045,18 @@
         function setDoOpa(){
             ide("undo").style.opacity=STEPS.length>1?"1":"0.5";
             ide("redo").style.opacity=REDO_STEPS.length>0?"1":"0.5";
+        }
+        
+        //操作屏外画布
+        function* offscr(){
+            let sc=OFFSCREEN_CANVAS;
+            let ct=sc.getContext('2d');
+            let w=sc.width=draw.width;
+            let h=sc.height=draw.height;
+            yield sc;
+            let data=ct.getImageData(0,0,w,h);
+            let d=data.data;
+            
         }
     </script>
     

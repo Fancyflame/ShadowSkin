@@ -13,15 +13,21 @@
         margin:0;
         padding-left:5vw;
         padding-right:5vw;
-        background-color:#f5ffed;
+        /*background-color:#fefffe;*/
+        background:white;
     }
     *{
         font-size:100%;
-        color:#040;
+        color:black;
     }
     blockquote{
-        border-left:0.4em solid yellowgreen;
+        color:dimgrey;
+        border-left:0.4em solid dimgrey;
         padding:0 0.4em;
+    }
+    blockquote::first-letter{
+        font-size:3.5em;
+        color:#555;
     }
     mark{
         border-radius:0.1em;
@@ -40,13 +46,15 @@
         color:#660;
     }
     h1,h2,h3{
-        text-align:center;
-        font-size:400%;
+        text-align:left;
+        padding-left:5vw;
+        font-size:5em;
+        text-shadow:-2px 1px 7px grey;
         border-left:0.4em solid yellowgreen;
-        background:linear-gradient(to right,yellowgreen,transparent 50%);
+        /*border-left-image:*/
     }
     a,ul,ol{
-        color:yellowgreen;
+        /*color:green;*/
     }
     p,blockquote,hint{
         font-size:2em;
@@ -87,10 +95,9 @@
         这是ShadowSkin的新手教程。然而，ShadowSkin的用法非常简单，
         你大可不必观看教程即可开始您的第一个项目。本文仅提示
         难以理解的相关操作
-        <br><br>
-        <u>编辑器页面在后续版本里还会继续更新，那教程总不能
-        更新一下换一次吧。那就凑合一下咯！</u>
     </blockquote>
+    编辑器页面在后续版本里还会继续更新，那教程总不能
+        更新一下换一次吧。那就凑合一下咯！
     <h3>目录</h3>
     <ol>
         <li><a href="#summary">概述</a></li>
@@ -107,12 +114,12 @@
         ShadowSkin开发的目的就是在移动客户端上搭建一个轻量级的
         皮肤编辑器。<br>它有<b>加光，色相，水渍等工具；三种笔头，可调半径等
         </b>画笔设置。它的预览您将会在编辑页面章节看到
-        <br><u>
-        <br>作者：FancyFlame
-        <br>没有用任何非原创类库</u>
-        <br><mark>如果有BUG或者好的建议，请发到我邮箱
-        fancyflame@163.com或者在github提个issue。谢谢!</mark>
+        <br>
     </blockquote>
+    <br>作者：FancyFlame
+        <u><br>没有用任何非原创类库</u>
+        <br><strong>如果有BUG或者好的建议，请发到我邮箱
+        fancyflame@163.com或者在github提个issue。谢谢!</strong>
     
     <h3 id="index">管理页面</h3>
     <blockquote>
@@ -198,12 +205,14 @@
                 <td>
                     局部光影调节
                     <ul>
-                        <li>加光：颜色叠加产生曝光效果</li>
-                        <li>吸光：颜色相乘产生暗部效果</li>
+                        <li>增亮：颜色减淡效果(color-dodge)，过度使用会变白色</li>
+                        <li>吸光：颜色加深效果(color-burn)，过度使用会变黑色</li>
+                        可以使用黑色或白色颜色笔调节白色混合度，以及
+                        使用背景相近色来造成曝光和反曝光效果
                     </ul>
                 </td>
                 <td>
-                    除了颜色外，其它都使用画笔属性
+                    使用全部画笔设置，颜色参数将影响加深/减淡的颜色趋势
                 </td>
             </tr>
             <tr>
