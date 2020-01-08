@@ -15,10 +15,6 @@
           /*color:white;*/
           font-size:40px;
       }
-      .anima{
-          transition:all 0.1s;
-          transition-timing-function:linear;
-      }
       html,body{
         height:100%;
         margin:0;
@@ -141,6 +137,8 @@
         justify-content:flex-end;
     }
     #top img{
+        transition:all 0.1s;
+        transition-timing-function:linear;
         height:100%;
         display:block;
     }
@@ -150,17 +148,26 @@
         -ms-interpolation-mode:nearest-neighbor;
     }
     /*工具栏*/
-    
     #under{
+        width:100%;
+        height:10vh;
+        overflow-y:scroll;
+        overflow-x:hidden;
         bottom:0;
         position:absolute;
-        height:10vh;
+        scroll-snap-type:block mandatory;
+    }
+    #under > div{
+        height:100%;
         /*border-top:1px solid silver;*/
         width:100%;
         display:flex;
+        scroll-snap-align:center;
     }
     #colorctnr{
-        height:100%;
+        /*不知道这为啥在翻到底下工具
+        栏的时候会多一个细细的一条，需要-1px*/
+        height:calc(100% - 1px);
         border-right:5px solid white;
         width:10vw;
         flex-grow:0;
@@ -182,7 +189,7 @@
         overflow-y:hidden;
         align-content:flex-start;
     }
-    .tool{
+    .tool,#globalOpr *{
         /*border-radius:15px;*/
         display:inline-block;
         height:15vw;
@@ -291,7 +298,8 @@
         let PEN;//主要笔
         let SKIN_INFO={};
         let LOAD_FUNC=()=>{};
-        let OFFSCREEN_CANVAS=document.createElement("canvas");
+        let COPIED;//复制的图片
+        let REFPICTURE;//参照图片
         let draw;//canvas
         let ctx;//canvas的context
         let UNLOAD_TOOL=()=>{};
@@ -529,11 +537,11 @@
                 this.div=d;
             }
             use(){
+                hint(this.hint);
                 if(this.locked){
                     alert("这个工具还没被开发哦");
                     return;
                 }
-                hint(this.hint);
                 UNLOAD_TOOL();
                 LOAD_FUNC=this.load||(()=>{});
                 
@@ -695,10 +703,6 @@
                 },
                 unload:()=>{
                     useGlobalColor();
-                },
-                modes:{
-                    block:"块",
-                    pen:"画笔"
                 }
             },
             lighting:{
@@ -765,10 +769,10 @@
                     obj.draw();
                 }
             },
-            shadow:{
-                hint:"阴影",
+            collector:{
+                hint:"颜色采集器",
                 locked:true,
-                picture:"shadow"
+                picture:"collector"
             }
         }
         
@@ -782,6 +786,7 @@
                     modes:{
                         lighting:"lighter"
                     },
+                    sample:null,
                     templPens:[],
                     pen:null
                 }
@@ -831,7 +836,6 @@
                 REDO_STEPS=[];
                 recordStep();
                 setDoOpa();
-                //TOOLS.pencil();
             }
             ide("pens").innerHTML="";
             d.editor.templPens.forEach((e,i)=>{
@@ -925,7 +929,8 @@
                     from:event.target.parentNode.id
                 }));
             }
-            div.ondragend=()=>{
+            div.ondragend=(ev)=>{
+                ev.preventDefault();
                 del.display="none";
             }
             div.ondragover=(ev)=>{
@@ -1039,7 +1044,7 @@
             REDO_STEPS=[];
             let data=ctx.getImageData(0,0,draw.width,draw.height);
             STEPS.push(data);
-            if(STEPS.length>50)STEPS.shift();
+            //if(STEPS.length>50)STEPS.shift();
             setDoOpa();
         }
         function setDoOpa(){
@@ -1047,16 +1052,65 @@
             ide("redo").style.opacity=REDO_STEPS.length>0?"1":"0.5";
         }
         
-        //操作屏外画布
-        function* offscr(){
-            let sc=OFFSCREEN_CANVAS;
-            let ct=sc.getContext('2d');
-            let w=sc.width=draw.width;
-            let h=sc.height=draw.height;
-            yield sc;
-            let data=ct.getImageData(0,0,w,h);
-            let d=data.data;
-            
+        //复制粘贴
+        
+        function copyPicture(){
+            if(!COPIED){
+                ide("paste").style.opacity=1;
+            }
+            let c=COPIED=new Image();
+            c.src=draw.toDataURL();
+            hint("已复制");
+        }
+        
+        function pastePicture(){
+            if(!COPIED){
+                hint("请先复制");
+                return;
+            }
+            recordStep();
+            ctx.clearRect(0,0,draw.width,draw.height);
+            let c=COPIED;
+            ctx.drawImage(c,0,0,c.width,c.height,
+                            0,0,draw.width,draw.height);
+            hint("已粘贴");
+        }
+        
+        //水平垂直翻转
+        function flipContext(alongY){
+            let m=alongY?-1:1;
+            recordStep();
+            ctx.save();
+            if(alongY)ctx.translate(draw.width,0)
+            else ctx.translate(0,draw.height)
+            ctx.scale(m,-m);
+            ctx.drawImage(draw,0,0);
+            //ctx.setTransform(1,0,0,1,0,0);
+            ctx.restore();
+        }
+        
+        //导入样本图片
+        function importSample(){
+            alert("这个按钮是用来加载颜色采集器的"+
+            "样本图片用的，不过功能还没做好，现在上传还没什么用哦");
+            return;
+            let fi=ide("import");
+            fi.value="";
+            fi.click();
+            fi.onchange=()=>{
+                let f=fi.files[0];
+                let fr=new FileReader();
+                fr.onload=()=>{
+                    let img=new Image();
+                    img.src=fr.result;
+                    SKIN_INFO.editor.sample=fr.result;
+                    img.onload=()=>hint("上传完成");
+                }
+                fr.onerror=()=>{
+                    hint("上传失败")
+                }
+                fr.readAsDataURL(f);
+            }
         }
     </script>
     
@@ -1086,17 +1140,24 @@
     
     <h3 id="hint">Hello</h3>
     <div id="top">
-        <img id="undo" class="anima" src="pic/editor/undo.png" onclick="undo()">
-        <img id="redo" class="anima" src="pic/editor/redo.png" onclick="redo()">
+        <img id="undo" src="pic/editor/undo.png" onclick="undo()">
+        <img id="redo" src="pic/editor/redo.png" onclick="redo()">
     </div>
     
     <button id="mode" class="anima"></button>
     <div id="under">
-        <div id="colorctnr">
-            <div id="selectColor" onclick="setPen();ide('blackBackground').style.display=''"></div>
+        <div>
+            <div id="colorctnr">
+                <div id="selectColor" onclick="setPen();ide('blackBackground').style.display=''"></div>
+            </div>
+            <div id="toolBar"></div>
         </div>
-        <div id="toolBar">
-            
+        <div id="globalOpr">
+            <img src="pic/editor/copy.png" onclick="copyPicture()">
+            <img id="paste" style="opacity:0.5" src="pic/editor/paste.png" onclick="pastePicture()">
+            <img src="pic/editor/mirror.png" onclick="flipContext(true)">
+            <img src="pic/editor/horizon.png" onclick="flipContext(false)">
+            <img src="pic/editor/import_image.png" onclick="importSample()">
         </div>
     </div>
     
@@ -1148,6 +1209,7 @@
             <a onclick="penSelected(false)">取消</a>
             <a onclick="penSelected(true)">确定</a>
         </div>
+        <input type="file" id="import" style="display:none;">
     </div>
     </div>
   </body>
