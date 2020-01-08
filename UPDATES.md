@@ -2,6 +2,16 @@
 <a href="README.md">返回README</a>
 <h2>2019.12.23开始记录</h2>
 
+<h3>1.0.0 build8</h3>
+<blockquote>
+2020.1.8
+<ol>
+<li>可以复制和粘贴图层了</li>
+<li>可以水平或镜像翻转图层了</li>
+<li>取消撤销步骤上限，请注意性能</li>
+</ol>
+</blockquote>
+
 <h3>1.0.0 build7</h3>
 <blockquote>
 2020.1.4
