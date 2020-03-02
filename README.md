@@ -1,4 +1,5 @@
-# ShadowSkin
+# ShadowSkin Newly
+<h2>Newly分支使用了新的编辑器页面</h2>
 <p>
 在线网站：<a href="https://fancyflame.github.io/ShadowSkin/">
 https://fancyflame.github.io/ShadowSkin/</a>
