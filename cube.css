@@ -1,0 +1,85 @@
+.cube3d {
+    /*backface-visibility: visible;*/
+    transform-style: preserve-3d;
+    /*贴图*/
+    --texture: rgba(75, 75, 255, 0.651);
+    --uvx: 0px;
+    --uvy: 0px;
+    /*长宽高*/
+    --sx: 10vmin;
+    --sy: 10vmin;
+    --sz: 10vmin;
+    /*位置*/
+    --posi: 0, 0, 0;
+    position: relative;
+    /*transform: scale3d(15, 15, 15);*/
+    transform: translate3d( calc(var(--sx) / 2), calc(-1 * var(--sy) / 2), calc(var(--sz) / 2)) translate3d(var(--posi)) var(--transform, scale3d(1, 1, 1));
+}
+
+.cube3d>* {
+    /*设置每个面*/
+    display: inline-block;
+    position: absolute;
+    box-sizing: content-box;
+    width: var(--sizew);
+    height: var(--sizeh);
+    --move: translate(calc((-1 * var(--sizew) / 2)), calc((-1 * var(--sizeh) / 2)));
+    background: var(--texture);
+    --background-repeat: no-repeat;
+    background-position-x: calc(-1 * (var(--bgx) + var(--uvx)));
+    background-position-y: calc(-1 * (var(--bgy) + var(--uvy)));
+}
+
+.cube3d>[front] {
+    transform: var(--move) var(--tran);
+    --bgx: var(--sz);
+    --bgy: var(--sz);
+}
+
+.cube3d>[back] {
+    transform: var(--move) rotateY(180deg) var(--tran);
+    --bgx: calc(2 * var(--sz) + var(--sx));
+    --bgy: var(--sz);
+}
+
+.cube3d>[front], .cube3d>[back] {
+    --sizew: var(--sx);
+    --sizeh: var(--sy);
+    --tran: translateZ(calc(var(--sz) / 2));
+}
+
+.cube3d>[left] {
+    transform: var(--move) rotateY(90deg) var(--tran);
+    --bgx: calc(var(--sz) + var(--sx));
+    --bgy: var(--sz);
+}
+
+.cube3d>[right] {
+    transform: var(--move) rotateY(-90deg) var(--tran);
+    --bgx: 0px;
+    --bgy: var(--sz);
+}
+
+.cube3d>[right], .cube3d>[left] {
+    --sizew: var(--sz);
+    --sizeh: var(--sy);
+    --tran: translateZ(calc(var(--sx) / 2));
+}
+
+.cube3d>[top] {
+    transform: var(--move) rotateX(90deg) var(--tran);
+    --bgx: var(--sz);
+    --bgy: 0px;
+}
+
+.cube3d>[bottom] {
+    transform: var(--move) rotateX(-90deg) var(--tran) rotateX(180deg);
+    --bgx: calc(var(--sz) + var(--sx));
+    --bgy: 0px;
+}
+
+.cube3d>[top], .cube3d>[bottom] {
+    --sizew: var(--sx);
+    --sizeh: var(--sz);
+    --tran: translateZ(calc(var(--sy) / 2));
+}

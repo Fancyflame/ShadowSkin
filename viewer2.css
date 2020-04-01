@@ -1,0 +1,240 @@
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    --ttheme: linear-gradient(45deg, #ff1f62, #a236fa);
+    --theme: yellowgreen;
+    --partScale: 22;
+    --showClothes: block;
+    font-size: 2.3vmin;
+}
+
+* {
+    transition: .2s background-color;
+}
+
+body>div {
+    display: flex;
+    flex-flow: column nowrap;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+body>div>div {
+    width: 100%;
+}
+
+pen-block {
+    border-radius: 10px;
+    margin: 1%;
+}
+
+pen-block>div {
+    width: 100%;
+    height: 100%;
+    text-align: center;
+}
+
+#headbar, #colorbar {
+    transition: .2s opacity;
+    top: 0;
+    width: 100%;
+}
+
+#colorbar {
+    background-color: var(--theme);
+    height: 10vh;
+}
+
+#headbar, #footbar {
+    flex: 0 0 auto;
+    background: var(--theme);
+    min-height: 2.3cm;
+    height: 10vh;
+    display: flex;
+    align-items: center;
+    overflow-x: scroll;
+    overflow-y: hidden;
+}
+
+/*第二个头部*/
+
+#head2 {
+    display: block;
+    height: 10vmin;
+}
+
+#skinName {
+    float: left;
+    padding: 1.6vmin;
+    border-radius: 2px;
+    margin: 5px;
+    background-color: #f3f3f3;
+    color: #525252;
+    font-weight: bold;
+    min-width: 3em;
+    text-align: center;
+    font-size: 120%;
+}
+
+#undoandredo {
+    float: right;
+    padding: 1.6vmin;
+    height: 7vmin;
+}
+
+#undoandredo>img {
+    height: 100%;
+    border-radius: 100cm;
+}
+
+#undoandredo>img:active {
+    background-color: var(--theme);
+}
+
+/*中间*/
+
+#middle {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+}
+
+#leftBar, #rightBar {
+    width: 10vw;
+    min-width: 1cm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 0 0 auto;
+    border-radius: 100cm;
+    padding: 20px 0;
+    overflow-x: hidden;
+}
+
+#leftBar {
+    background: var(--theme);
+    margin-left: 1vw;
+}
+
+#leftBar img[sele=true] {
+    background: #ffffff80;
+}
+
+#scene {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    perspective: 500px;
+    height: 100%;
+    flex: 1 1 auto;
+}
+
+#rightBar {
+    margin-right: 1vw;
+}
+
+#rightBar>* {
+    margin: 5px 0;
+}
+
+/*人偶*/
+
+#human {
+    transform-style: preserve-3d;
+    position: absolute;
+    top: 50%;
+}
+
+#human[showWhole=false]>*:not([showPart=true]) {
+    transform: scale3d(0, 0, 0) !important;
+}
+
+#human[showWhole=false]>[showPart=true] {
+    transform: scale3d(var(--partScale), var(--partScale), var(--partScale)) !important;
+}
+
+#human[showWhole=false]>[showPart=true][isClothes] {
+    --m: calc(1.05 * var(--partScale));
+    transform: scale3d(var(--m), var(--m), var(--m)) !important;
+}
+
+/*
+#human>div {
+    backface-visibility: hidden;
+}
+*/
+
+.cube3d {
+    image-rendering: pixelated;
+    transition: .2s all linear;
+}
+
+.cube3d>* {
+    transition: .2s transform;
+}
+
+canvas {
+    image-rendering: pixelated;
+    width: 100%;
+}
+
+.cube3d[isClothes] {
+    display: var(--showClothes);
+}
+
+/*小按钮*/
+
+.icon {
+    height: 100%;
+    flex: 0 0 10vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 1%;
+}
+
+.icon>img {
+    background-color: #ffffff80;
+    border-radius: 10px;
+    flex: 0 0 8px;
+    height: 70%;
+    margin: 4%;
+    transition: background-color .2s;
+}
+
+st-btn>img:active {
+    background-color: #ffffffc0;
+}
+
+.icon>div {
+    flex: 1 1 1px;
+    text-align: center;
+    color: white;
+    text-shadow: black 0 0 2px;
+    white-space: nowrap;
+}
+
+/*侧边栏按钮*/
+
+body-part, view-opt {
+    flex: 0 0 auto;
+    width: 10vmin;
+    height: 10vmin;
+    display: flex;
+    justify-content: center;
+    margin: 0 3px;
+}
+
+body-part>img, view-opt>img {
+    width: 100%;
+    border-radius: 100cm;
+}

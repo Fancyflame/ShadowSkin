@@ -1,19 +1,22 @@
-function addTouchHandle(parent, ele) {
+function addTouchHandle(parent, allowBubble = true) {
   let ontrans = () => { };
   let total = [];
   let limitLock = true;
   //ROTATE
   {
     const pi2 = Math.PI * 2;
-    const DEBUG = 0
+    const DEBUG = 0;
     let MOUSEDOWN = false;
     let mov = [0.875, 0.25];//横竖总位移，用于计算总角度
-    if (!DEBUG) mov = [0, 0]
+    if (!DEBUG) mov = [0, 0];
     let ltp;//上次坐标位置
     function start(ev) {
+      ev.preventDefault();
+      ev.cancelBubble = true;
+      if (!allowBubble && ev.target != parent) return;
       MOUSEDOWN = true;
       //ev.preventDefault();
-      let t=ev.touches?ev.touches[0]:ev;
+      let t = ev.touches ? ev.touches[0] : ev;
       ltp = [t.pageX, t.pageY];
       if (DEBUG) move(ev);
     }
@@ -22,18 +25,20 @@ function addTouchHandle(parent, ele) {
       ltp = null;
     }
     function move(ev) {
+      ev.preventDefault();
+      ev.cancelBubble = true;
       if (!MOUSEDOWN) return;
       let lm = [0, 0];//上一次旋转角
       let cm = [0, 0];//这一次旋转角
       let out = [];//最终输出
       {
-        ev.preventDefault();
+
         let a = ev.touches[0];
         lm = mov.slice();
         mov = mov.map((x) => {
-          if (x > 1) return x - 1
-          else if (x < 0) return x + 1
-          else return x
+          if (x > 1) return x - 1;
+          else if (x < 0) return x + 1;
+          else return x;
         });
         let b = [(a.pageX - ltp[0]) / 1000, (a.pageY - ltp[1]) / 1000];
         {
@@ -41,13 +46,13 @@ function addTouchHandle(parent, ele) {
             - a.pageY) * 2 / parent.clientHeight;
           let spl = Math.cos((mov[1] + p / 10) * pi2);
 
-          if (spl < 0) b[0] *= -1
+          if (spl < 0) b[0] *= -1;
         }
         mov[0] += b[0];
         mov[1] += b[1];
-        let lock = 0.25
+        let lock = 0.25;
         if (limitLock && Math.cos(mov[1] * pi2) < Math.cos(lock * pi2)) {
-          mov[1] = mov[1] < 0.5 ? lock : -lock
+          mov[1] = mov[1] < 0.5 ? lock : -lock;
         }
         cm = mov.slice();
         //alert(mov)
@@ -75,10 +80,10 @@ function addTouchHandle(parent, ele) {
       }
       out = out.map(x => {
         x = x.map((y, i) => {
-          if (true) return y.toFixed(4)
-          else return y
+          if (true) return y.toFixed(4);
+          else return y;
         });
-        return `rotate3d(${x.join(",")}turn)`
+        return `rotate3d(${x.join(",")}turn)`;
       }
       );
       //alert(out)
@@ -94,7 +99,7 @@ function addTouchHandle(parent, ele) {
       let sin1 = Math.sin(t),
         cos1 = Math.cos(t),
         sin2 = v[1] / len,
-        cos2 = v[2] / len
+        cos2 = v[2] / len;
 
       v[1] = (sin1 * cos2 + cos1 * sin2) * len;
       v[2] = (cos1 * cos2 - sin1 * sin2) * len;
@@ -109,7 +114,7 @@ function addTouchHandle(parent, ele) {
       let sin1 = Math.sin(t),
         cos1 = Math.cos(t),
         sin2 = v[2] / len,
-        cos2 = v[0] / len
+        cos2 = v[0] / len;
 
       v[0] = (cos1 * cos2 - sin1 * sin2) * len;
       v[2] = (cos1 * sin2 + cos2 * sin1) * len;
@@ -118,12 +123,12 @@ function addTouchHandle(parent, ele) {
 
     let events = {
       touchstart: start,
-      mousedown: start,
+      mmousedown: start,
       touchmove: move,
-      mousemove: move,
+      mmousemove: move,
       touchend: end,
-      mouseup: end
-    }
+      mmouseup: end
+    };
     for (let i in events) {
       parent.addEventListener(i, events[i]);
     }
@@ -131,17 +136,17 @@ function addTouchHandle(parent, ele) {
 
 
   function apply() {
-    ontrans.call(null, total.join(""))
+    ontrans.call(null, total.join(""));
     //alert(total.join(""))
   }
   return {
     set ontransform(v) {
       if (typeof v == "function")
-        ontrans = v
+        ontrans = v;
       else if (typeof v == "string")
-        ontrans = new Function(v)
+        ontrans = new Function(v);
       else
-        ontrans = () => { }
+        ontrans = () => { };
     },
     get ontransform() {
       return ontrans;
@@ -152,5 +157,5 @@ function addTouchHandle(parent, ele) {
     get limitLock() {
       return limitLock;
     }
-  }
+  };
 }
