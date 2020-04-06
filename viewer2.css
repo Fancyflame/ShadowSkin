@@ -8,12 +8,13 @@ body {
     --ttheme: linear-gradient(45deg, #ff1f62, #a236fa);
     --theme: yellowgreen;
     --partScale: 22;
-    --showClothes: block;
+    --showClothes: none;
     font-size: 2.3vmin;
 }
 
 * {
     transition: .2s background-color;
+    touch-action: pan-x;
 }
 
 body>div {
@@ -29,29 +30,14 @@ body>div>div {
     width: 100%;
 }
 
-pen-block {
-    border-radius: 10px;
-    margin: 1%;
-}
-
-pen-block>div {
-    width: 100%;
-    height: 100%;
-    text-align: center;
-}
-
-#headbar, #colorbar {
-    transition: .2s opacity;
+#headbar {
+    position: absolute;
     top: 0;
-    width: 100%;
-}
-
-#colorbar {
-    background-color: var(--theme);
-    height: 10vh;
+    border-bottom: 3px solid rgb(120, 255, 138);
 }
 
 #headbar, #footbar {
+    width: 100%;
     flex: 0 0 auto;
     background: var(--theme);
     min-height: 2.3cm;
@@ -60,6 +46,45 @@ pen-block>div {
     align-items: center;
     overflow-x: scroll;
     overflow-y: hidden;
+}
+
+#colorbar {
+    width: 100%;
+    height: 10vh;
+    background-color: #eee;
+    height: 13vh;
+}
+
+#colorbar>div {
+    width: 100%;
+    height: 50%;
+    display: flex;
+}
+
+#template::before {
+    content: '';
+    width: 20px;
+    height: 2px;
+    background-color: var(--theme);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+pen-block {
+    display: block;
+    text-align: center;
+    width: 0.8cm;
+    height: 0.8cm;
+    border-radius: 100%;
+    margin: 5px;
+    font-size: 0.5vmin;
+}
+
+@keyframes headbar_hide {
+    to {
+        transform: translateY(-100%);
+    }
 }
 
 /*第二个头部*/
@@ -104,6 +129,84 @@ pen-block>div {
     flex: 1 1 auto;
     display: flex;
     align-items: center;
+}
+
+#palettePannel {
+    width: 40vw;
+    max-width: 6cm;
+    height: 100%;
+    position: absolute;
+    background-color: #f3f3f3;
+    border-right: 3px solid #aaa;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-size: 1.2em;
+}
+
+#palettePannel>* {
+    width: 90%;
+    margin: 5px 0;
+}
+
+#palettePannel>button {
+    margin-top: 15px;
+}
+
+#palettePannel>div:first-child {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    writing-mode: vertical-rl;
+    height: 100;
+    color: dimgray;
+    width: min-content;
+}
+
+#palettePannel>input {
+    margin: 10px 0;
+}
+
+input[type=color] {
+    height: 10vh;
+    padding: 0;
+}
+
+input[type=range] {
+    width: 70%;
+    background-color: #7e7e7e;
+    -webkit-appearance: none;
+    height: 8px;
+    border-radius: 4px;
+    box-shadow: 0 0 15px -10px black inset;
+}
+
+input[type=range]:focus {
+    outline: none;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    /*清除默认样式*/
+    height: 20px;
+    width: 10px;
+    border-radius: 1000cm;
+    border: 1px solid gray;
+    background: white;
+    position: relative;
+    top: -70%;
+    --margin-top: -5.5px;
+    /*使用position的话会导致滑块不滑动,但是绑定的value是改变的,所以这里使用margin-top去做定位*/
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    height: 8px;
+}
+
+@keyframes palettePannel_hide {
+    to {
+        transform: translateX(-100%);
+    }
 }
 
 #leftBar, #rightBar {

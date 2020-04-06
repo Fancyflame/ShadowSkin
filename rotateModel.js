@@ -25,8 +25,10 @@ function addTouchHandle(parent, allowBubble = true) {
       ltp = null;
     }
     function move(ev) {
-      ev.preventDefault();
-      ev.cancelBubble = true;
+      try {
+        ev.preventDefault();
+        ev.cancelBubble = true;
+      } catch (err) { return; }
       if (!MOUSEDOWN) return;
       let lm = [0, 0];//上一次旋转角
       let cm = [0, 0];//这一次旋转角

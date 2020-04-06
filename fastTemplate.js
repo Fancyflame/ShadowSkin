@@ -15,16 +15,29 @@ let FTM;
         let watchPool = new Set();
         let ftmData = {};
         let ftmProxy;
-        data[DataSource.watch] = function (watcher) {
-            watchPool.add(watcher);
-            Object.entries(ftmData).forEach(x => watcher.render(...x));
-        };
-        data[DataSource.unwatch] = function (watcher) {
-            watchPool.delete(watcher);
-        };
-        data[DataSource.getValue] = function () {
-            return ftmData;
-        };
+        {
+            let obj = {
+                $watch: function (watcher) {
+                    watchPool.add(watcher);
+                    Object.entries(ftmData).forEach(x => watcher.render(...x));
+                },
+                $unwatch: function (watcher) {
+                    watchPool.delete(watcher);
+                },
+                $getValue: function () {
+                    return ftmData;
+                }
+            };
+            for (let i in obj) {
+                (function (i) {
+                    Object.defineProperty(data, i, {
+                        get: function () {
+                            return obj[i];
+                        }
+                    });
+                })(i);
+            }
+        }
         //设置ftmProxy选项
         let haveSettedData = false;
         //console.log(target.ftmData);
@@ -36,7 +49,9 @@ let FTM;
                 //劫持get和set
                 if (once && haveSettedData) return;
                 haveSettedData = true;
-                Object.keys(ftmData).forEach(x => delete data[x]);
+                Object.keys(ftmData).forEach(x => {
+                    delete data[x];
+                });
                 ftmData = Object.assign({}, v);
                 Object.entries(v).forEach(array => {
                     let prop = array[0];
@@ -51,7 +66,9 @@ let FTM;
                             watchPool.forEach(x => {
                                 x.render(prop, v);
                             });
-                        }
+                        },
+                        configurable: true,
+                        enumerable: true
                     };
                     Object.defineProperty(v, prop, options);
                     Object.defineProperty(data, prop, options);
@@ -60,7 +77,7 @@ let FTM;
                     });
                 });
                 if (once) {
-                    Object.freeze(v);//禁止修改
+                    Object.seal(v);//禁止修改
                 }
                 ftmProxy = v;
                 /*ftmData = {};
@@ -76,9 +93,6 @@ let FTM;
             }
         });
     };
-    DataSource.watch = Symbol("DataSourceWatch");
-    DataSource.unwatch = Symbol("DataSourceUnwatch");
-    DataSource.getValue = Symbol("DataSourceGetValue");
     const Binds = function (node) {
         let binds = this;
         let sources = new Set(); //绑定到的数据源
@@ -91,7 +105,7 @@ let FTM;
             }
             //if (sources.has(data)) return;
             sources.add(data);
-            data[DataSource.watch](binds);
+            data.$watch(binds);
         };
         binds.disconnectFrom = function (data) {
             if (data instanceof Array) {
@@ -100,13 +114,16 @@ let FTM;
             }
             //if (!sources.has(data)) return;
             sources.delete(data);
-            data[DataSource.unwatch](binds);
+            data.$unwatch(binds);
         };
-        Object.defineProperty(binds, "firstData", {
-            get: function () {
-                return sources.values().next().value || null;
+        Object.defineProperties(binds, {
+            firstData: {
+                get: function () {
+                    return sources.values().next().value || null;
+                }
             }
         });
+        binds.getValue = DataSource.getValue;
         binds.connectedData = sources;
         const listeners = {
             //模板里头绑定的数据
@@ -125,6 +142,7 @@ let FTM;
             }
             */
         };
+
         //这块负责读取需要的模块
         const detectVar = (name) => {
             //创建一个观察变量
@@ -222,14 +240,13 @@ let FTM;
                                     if (--stacks == 0) {
                                         //js引用结束，输出也包含}
                                         let ctt = str.slice(startIndex, reg.lastIndex + reg2.lastIndex);
-                                        //lazy-js就是仅当当前属性或文本变化时才被动渲染
                                         if (type == "glb-js:") blocks.push([startIndex, ctt, "##javascript"]);
                                         else {
                                             let raw = ctt.slice(ctt.indexOf(":") + 1, -1);
                                             let detect = raw.match(/(?<=(?<![\w\$])data\.)([\w\$]+)/g);
                                             blocks.push([startIndex, ctt, detect]);
                                         }
-                                        reg.lastIndex += ctt.length + 1 - 2;
+                                        reg.lastIndex += ctt.length - 2;
                                         break;
                                     }
                                 }
@@ -323,7 +340,9 @@ let FTM;
                 for (let n in a) {
                     let str = a[n];//属性模板字符串
                     str = overrideBlock(str);
-                    let attrname = n.slice(0, 4) == "ftm:" ? n.slice(4) : n;
+                    let isJSAttr = n.slice(0, 4) == "ftm:";
+                    let isDomAttr = n.slice(0, 5) == "ftm::";
+                    let attrname = isDomAttr ? n.slice(5) : (isJSAttr ? n.slice(4) : n);
                     if (attrname == "ftm-use-html") {
                         if (str instanceof Node && str.childNodes.length > 0) {
                             ele.innerHTML = "";
@@ -331,7 +350,8 @@ let FTM;
                             isHTML = true;
                         }
                     }
-                    ele.setAttribute(attrname, str);
+                    if (isJSAttr && !isDomAttr) ele[attrname] = str;
+                    else ele.setAttribute(attrname, str);
                 }
             }
             //写入文本
@@ -381,13 +401,11 @@ let FTM;
             if (target._ftmComputed) return;
             target._ftmComputed = true;
             let isSource;
-            let isAnon;
             if (target.nodeType == 1) {
                 isSource = target.nodeName == "FTM-SRC" || target.hasAttribute("ftm-src");
-                isAnon = target.hasAttribute("ftm-anon");
             }
             //匿名模板，即自身
-            let tem = isAnon ? target.cloneNode(true) : templates[target.nodeName.toLowerCase()];
+            let tem = isSource ? target.cloneNode(true) : templates[target.nodeName.toLowerCase()];
             function getLoader() {
                 let n = target.parentElement;
                 while (n && !n.ftmData) {
@@ -395,6 +413,7 @@ let FTM;
                 }
                 return n;
             }
+            //如果又不是实例化的模板又不是数据源那就是普通元素了
             if (!tem && !isSource) {
                 if (!parentBinds) {
                     let n = getLoader();
@@ -405,6 +424,8 @@ let FTM;
                 target.ftmObs = parentBinds.ele;
                 return;
             }
+
+
             if (!isSource)
                 for (let attr of tem.attributes) {
                     let { name: i, value: o } = attr;
@@ -450,7 +471,7 @@ let FTM;
                         }
                     }
                     calc("ftm-cpdata", (d) => {
-                        Object.assign(obj, d[DataSource.getValue]());
+                        Object.assign(obj, DataSource.getValue(d));
                     });
                     calc("ftm-bddata", (d) => {
                         _source.add(d);
@@ -552,14 +573,22 @@ let FTM;
             let w = [ftmData, ..._source];
             binds.connectTo(w);
             //导入模板
-            if (!isAnon && !isSource) {
+            if (!isSource) {
                 target.innerHTML = "";
                 let ctt = document.importNode(tem.content, true);
                 target.appendChild(ctt);
-            } else {
-
             }
-            target.dispatchEvent(new CustomEvent("ftmdata"));
+            //处理oncreate事件
+            target.addEventListener("ftmdata", function (event) {
+                if (target.hasAttribute("ftm-oncreate")) {
+                    new Function("event", target.getAttribute("ftm-oncreate")).call(target, event);
+                }
+            });
+            target.dispatchEvent(new CustomEvent("ftmdata", {
+                detail: {
+                    ftmData, ftmBinds: binds
+                }
+            }));
         }
     }
     let mutobs = new MutationObserver((records) => {

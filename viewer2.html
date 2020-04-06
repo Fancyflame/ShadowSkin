@@ -16,341 +16,20 @@
     <script src="rotateModel.js"></script>
     <script src="pic.js"></script>
     <script src="fastTemplate.js"></script>
-    <script src="drawTools.js"></script>
+    <script src="effect.js"></script>
+    <script src="viewer2.js"></script>
     <!--script src="debugger.js"></script-->
     <script>
-        var MODEL = mobs.alex; //人物模型
-        var TEXTURE = b64sk.raw.alex; //预设材质
-        var HUMAN; //已加载的人偶
-        var DRAW = document.createElement("canvas"); //全身贴图
-        var CTX = DRAW.getContext("2d"); //上面的context
-        var RENDER = document.createElement("canvas"); //这个是部分身体贴图，配合DRAW快速绘制
-        var RCTX = RENDER.getContext("2d");
-        var SCALE = Math.min(screen.width, screen.height) / 35; //小人缩放倍数
-        var SKIN_INFO = {}; //皮肤数据
-        var SKIN_INFO_LAST;//上次保存的SKIN_INFO，用于验证是否保存。这个是字符串
-        var UIINFO; //ui界面数据
-        var UNDO_LIST = [];//可以被撤回的步骤
-        var REDO_LIST = [];//可以被重做的步骤
-
-        //载入新皮肤
-        window.addEventListener("msg", (d) => {
-            d = d.detail;
-            SKIN_INFO = d;
-            SKIN_INFO_LAST = JSON.stringify(d);
-            MODEL = mobs[d.model];
-            document.getElementById("rightBar").firstElementChild.click();
-            showClothes(true);
-            changeArm(d.model);
-            setTexture(d.texture);
-            document.getElementById("skinName").innerText = d.name;
-        });
-
-        //首次加载
-        function documentLoad() {
-            UIINFO = document.getElementById("uiinfo").ftmBinds;
-            /*UIINFO.addEventListener("ftmdata", () => {
-                UIINFO=UIINFO.ftmData;
-            })*/
-            document.body.style.setProperty("--partScale", SCALE * 1.5);
-            let human = document.createElement("div");
-            human.ftmData = {
-                model: "alex"
-            }
-            human.setAttribute("ftm-src", "");
-            human.id = "human";
-            HUMAN = human;
-            let scene = document.getElementById("scene");
-            scene.appendChild(human);
 
 
-            for (let i in MODEL) {
-                let c = cube3d.gen();
-                let _scale = SCALE;
-                if (MODEL[i].inflate) {
-                    c.setAttribute("isClothes", "");
-                    _scale *= 1.05;
-                }
-                function readskin(i) {
-                    let { origin, size, uv } = MODEL[i];
-                    origin = origin.slice();
-                    origin[1] -= 16;
-                    origin = origin.map((x, i) => SCALE * (x + (size[i] / 2)) - size[i] / 2);
-                    origin[1] *= -1;
-                    origin = origin.map(x => x + "px").join(",");
-
-                    let [x, y, z] = size.map(x => x + "px"); //长宽高
-                    //c.faceStyles.background = "#ff444450";
-                    let posi;
-                    {
-                        let [x, y, z] = size;
-                        posi = {
-                            //fromX,fromY,width,height
-                            front: [z, z, x, y],
-                            back: [2 * z + x, z, x, y],
-                            top: [z, 0, x, z],
-                            bottom: [z + x, 0, x, z],
-                            left: [z + x, z, z, y],
-                            right: [0, z, z, y]
-                        }
-
-                    }
-                    for (let i in c.faces) {
-                        let f = c.faces[i];
-                        let u = posi[i];
-                        let p = [uv[0] + u[0], uv[1] + u[1]]; //材质定位
-
-                        //画！
-                        function mousemove(ev) {
-                            ev.preventDefault()
-                            let x = Math.floor(ev.offsetX);
-                            let y = Math.floor(ev.offsetY);
-                            if (x < 0 || x >= f.clientWidth || y < 0 || y >= f.clientHeight) return;
-                            RCTX.fillRect(p[0] + x, p[1] + y, 1, 1);
-                            f.style.backgroundImage = "url(" + RENDER.toDataURL() + ")";
-                        }
-                        f.onpointerdown = (ev) => {
-                            ev.preventDefault();
-                            RCTX.fillStyle = "red";
-                            RCTX.clearRect(0, 0, 64, 64);
-                            RCTX.putImageData(CTX.getImageData(p[0], p[1], f.clientWidth, f.clientHeight), p[0], p[1]);
-                            UNDO_LIST.push([f, CTX.getImageData(0, 0, 64, 64)]);
-                            REDO_LIST.splice(0);
-                            mousemove(ev);
-                        }
-                        f.ontouchmove = (ev) => { }
-                        f.onpointermove = mousemove;
-                        f.ontouchend = (ev) => {
-                            CTX.putImageData(RCTX.getImageData(p[0], p[1], f.clientWidth, f.clientHeight), p[0], p[1]);
-                            SKIN_INFO.texture = DRAW.toDataURL();
-                        }
-                    }
-
-                    c.setvar({
-                        sx: x,
-                        sy: y,
-                        sz: z,
-                        posi: origin,
-                        transform: "scale3d(" + [_scale, _scale, _scale].join(",") + ")"
-                    });
-                }
-
-                if (["leftArm", "rightArm", "leftSleeve", "rightSleeve"].includes(i)) {
-                    let f = readskin.bind(null, i);
-                    human.addEventListener("ftmdata", () => {
-                        human.ftmBinds.addPropListener("model", (val) => {
-                            let m = MODEL = mobs[val];
-                            f();
-                        });
-                    });
-                    f();
-                } else readskin(i);
-                c.id = i + "_cube";
-                c.onclick = () => {
-                    let btn = document.querySelector("[button~=" + i + "]");
-                    let sel = btn.parentElement.ftmData.selected.ftmData.part;
-                    //if (sel == btn) return;
-                    if (sel == "whole") btn.click();
-                }
-                c.cubeInfo = MODEL[i];
-                human.appendChild(c);
-                //c.setvar({ transform: "scale3d(" + [SCALE, SCALE, SCALE].join(",") + ")" })
-            }
-            setTexture(TEXTURE);
-            let handle = addTouchHandle(scene, false);
-            handle.ontransform = (s) => {
-                human.style.transform = s;
-            }
-        }
-
-        //设置贴图
-        function setTexture(src) {
-            let img = new Image();
-            img.src = src;
-            img.onload = function () {
-                DRAW.width = img.width;
-                DRAW.height = img.height;
-                CTX.drawImage(img, 0, 0);
-            };
-            for (let c of HUMAN.children) {
-                //这里的c就是每个身体部位了
-                let {
-                    size: [x, y, z],
-                    uv
-                } = c.cubeInfo;
-                let [uvx, uvy] = uv.map(x => x + "px");
-                c.faceStyles.backgroundImage = "";
-                c.setvar({
-                    texture: "url(" + src + ")",
-                    uvx, uvy
-                });
-                /*let posi = {
-                    //fromX,fromY,width,height
-                    front: [z, z, x, y],
-                    back: [2 * z + x, z, x, y],
-                    top: [z, 0, x, z],
-                    bottom: [z + x, 0, x, z],
-                    left: [z + x, z, z, y],
-                    right: [0, z, z, y]
-                }
-                for (let fc in c.faces) {
-                    let cvs = document.createElement("canvas");
-                    let [fx, fy, wd, ht] = posi[fc];
-                    let ctx = cvs.getContext("2d");
-                    cvs.width = wd;
-                    cvs.height = ht;
-                    ctx.drawImage(img, uv[0] + fx, uv[1] + fy, wd, ht, 0, 0, wd, ht);
-                    c.faces[fc].appendChild(cvs);
-                }*/
-            };
-        }
-
-        //选择显示的身体部位
-        function showBodyPart(old, ne, oldClothesView = UIINFO.firstData.showClothes) {
-            ne.parentNode.ftmData.selected = ne;
-            aaa(old.ftmData.part);
-            aaa(old.ftmData.clothes);
-            function aaa(oldName) {
-                if (oldName == "whole") {
-                    HUMAN.setAttribute("showWhole", false);
-                } else {
-                    let Old = document.getElementById(oldName + "_cube");
-                    Old.setAttribute("showPart", false);
-                }
-            }
-            ne.setAttribute("showPart", true);
-            UIINFO.viewingPart = ne;
-            bbb(ne.ftmData.part);
-            bbb(ne.ftmData.clothes);
-            function bbb(newName) {
-                if (newName == "whole") {
-                    HUMAN.setAttribute("showWhole", true);
-                } else {
-                    let New = document.getElementById(newName + "_cube");
-                    New.setAttribute("showPart", true);
-                }
-            }
-
-        }
-
-        //切换手臂粗细
-        function changeArm(to) {
-            let div = document.getElementById("arm");
-            if (!to) to = div.ftmData.value == "alex" ? "steve" : "alex";
-            MODEL = mobs[to];
-            div.ftmData.value = to;
-            div.ftmData.color = to == "alex" ? "lightpink" : "skyblue";
-            HUMAN.ftmData.model = to;
-            SKIN_INFO.model = to;
-        }
-
-        //显示衣物
-        function showClothes(show) {
-            let btn = document.getElementById("clothes");
-            show = show === undefined ? !(btn.ftmData.value == "true") : show;
-            document.body.style.setProperty("--showClothes", show ? "block" : "none");
-            btn.ftmData.color = show ? "palegreen" : "lightgrey";
-            btn.ftmData.value = show + "";
-            UIINFO.firstData.showClothes = show;
-            //let o = document.getElementById("rightBar").ftmData.selected;
-            //showBodyPart(o, o, !show);
-        }
-
-        //与index的互动
-        function skinOpr(event) {
-            if (!event) return;
-            if (event == "save") {
-                HFrame.send({
-                    event,
-                    save: SKIN_INFO
-                });
-            } else if (event == "close") {
-                if (JSON.stringify(SKIN_INFO) != SKIN_INFO_LAST) {
-                    let q = prompt("您的工程还未保存，要保存后返回吗？(Y|n|*)");
-                    q = q ? q.toLowerCase() : q;
-                    if (q == "y" || q == "")
-                        HFrame.send({
-                            event,
-                            save: SKIN_INFO
-                        });
-                    else if (q == "n")
-                        HFrame.send({ event })
-                } else {
-                    HFrame.send({ event });
-                }
-            } else if (event == "copy") {
-                let m = prompt("复制的新皮肤的名字是：");
-                if (m === null) return;
-                m = m.trim().replace(/\n/g, "").slice(0, 10);
-                if (!m) alert("名字不能全是空白字符")
-                else HFrame.send({
-                    event, name: m
-                })
-            } else if (event == "delete") {
-                if (confirm("确定要删除皮肤吗？不能恢复的哟") && !confirm("按“取消”来删除")) {
-                    HFrame.send({ event });
-                }
-            }
-        }
-
-        //导出皮肤或工程
-        function outputFile(type) {
-            let a = document.createElement("a");
-            a.download = SKIN_INFO.name + "." + (type == "skin" ? "png" : "json");
-            if (type == "skin") {
-                let s = DRAW.toDataURL();
-                a.href = s;
-                a.click();
-            } else {
-                let s = JSON.stringify(SKIN_INFO);
-                s = new Blob([s], { type: "application/octet-stream" });
-                s = URL.createObjectURL(s);
-                a.href = s;
-                a.click();
-                URL.revokeObjectURL(s);
-            }
-        }
-
-        //改名
-        function rename(ele) {
-            let m = ele.innerText;
-            m = m.trim().replace(/\n/g, "").slice(0, 10);
-            if (!m) ele.innerText = SKIN_INFO.name;
-            else {
-                SKIN_INFO.name = m;
-                ele.innerText = m;
-            }
-        }
-
-        //开始编辑
-        function editSkin() {
-            let headbar = document.getElementById("headbar").style;
-            let colorbar = document.getElementById("colorbar").style;
-            headbar.opacity = "0";
-            headbar.zIndex = "-1";
-            colorbar.opacity = "1";
-            colorbar.zIndex = "1";
-            document.body.style.setProperty("--theme", "orange");
-        }
-
-        //撤销和重做
-        function undoandredo(cover) {
-            let rec = cover == UNDO_LIST ? REDO_LIST : UNDO_LIST;
-            let s = cover.pop();
-            if (!s) return;
-            rec.push(s);
-            CTX.putImageData(s[1], 0, 0);
-            s[0].style.backgroundImage = "url(" + DRAW.toDataURL() + ")";
-        }
-        var undo = undoandredo.bind(null, UNDO_LIST);
-        var redo = undoandredo.bind(null, REDO_LIST);
     </script>
     <ftm-src id="uiinfo" ftm-args="showClothes viewingPart">\s \s</ftm-src>
     <!--画画工具-->
-    <template ftm-el="draw-tool" ftm-args="icon name active" ftm-bddata="^" ftm:class="icon">
-        <img ftm:src="%{js:'pic/'+data.icon+'.png'||''}"
+    <template ftm-el="draw-tool" ftm-args="tool name" ftm-bddata="^" ftm:class="icon"
+        ftm-oncreate="drawToolCreate(event)">
+        <img ftm:src="%{js:'pic/'+data.tool+'.png'||''}"
             ftm:style="background-color:%{js:data.selected==this?'#ffffffd0':'auto'}"
-            ftm:onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;%{active}">
+            ftm::onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;useTool('%{tool}')">
         <div>%{name}</div>
     </template>
     <!--短按按钮-->
@@ -368,25 +47,27 @@
         <img ftm:src="pic/%{view}.png" ftm:style="background-color:%{color}">
     </template>
     <!--画笔块-->
-    <template ftm-el="pen-block">
-        <div ftm:style="background:%{color};color:%{js:calcColor(data.color)}">
-            <span>%{type}</span><br>
-            <span>%{js:parseInt(data.opacity*100)}</span>
-        </div>
+    <template ftm-el="pen-block" ftm-args="color nib size opacity"
+        ftm:style="background:%{color};color:%{js:calcColor(data.color)}" ftm:onclick="usePen(this.ftmData)">
+        <span>%{js:data.nib[0].toUpperCase()}%{size}</span><br>
+        <span>%{opacity}</span>
     </template>
+
     <div>
-        <div style="position: relative;">
-            <!--div id="colorbar"></div-->
-            <div id="headbar">
-                <st-btn>edit 编辑 editSkin()</st-btn>
-                <st-btn>backward_arrow 返回 skinOpr('close')</st-btn>
-                <st-btn>save 保存 skinOpr('save')</st-btn>
-                <st-btn>copy 复制工程 skinOpr('copy')</st-btn>
-                <st-btn>download 导出皮肤 outputFile('skin')</st-btn>
-                <st-btn>output 导出工程 outputFile('project')</st-btn>
-                <st-btn>trash 删除 skinOpr('delete')</st-btn>
-                <st-btn>add_ref 添加参照 \s</st-btn>
+        <div id="colorbar">
+            <div id="template"></div>
+            <div id="history">
+                <pen-block>#0e7af9 circle 2 40</pen-block>
             </div>
+        </div>
+        <div id="headbar" effect-handle>
+            <st-btn>backward_arrow 返回 skinOpr('close')</st-btn>
+            <st-btn>save 保存 skinOpr('save')</st-btn>
+            <st-btn>copy 复制工程 skinOpr('copy')</st-btn>
+            <st-btn>download 导出皮肤 outputFile('skin')</st-btn>
+            <st-btn>output 导出工程 outputFile('project')</st-btn>
+            <st-btn>trash 删除 skinOpr('delete')</st-btn>
+            <st-btn>add_ref 添加参照 \s</st-btn>
         </div>
         <div id="head2">
             <div id="skinName" contenteditable onkeypress="if(event.key=='Enter')this.blur()" onblur="rename(this);">
@@ -407,23 +88,49 @@
                 <body-part>leftLeg leftPants</body-part>
             </div>
             <div id="scene"></div>
+            <div id="palettePannel" effect-handle ftm-src ftm-oncreate="onPaletteLoad(this)"
+                oninput="paletteInput(event)">
+                color:#972dae
+                nib:rect
+                size:1
+                opacity:25
+                <div>Palette</div>
+                <input name="color" type="color" ftm:value="%{color}">
+                <select name="nib" ftm:value="%{nib}">
+                    <option value="rect">矩形笔尖</option>
+                    <option value="circle">圆形笔尖</option>
+                </select>
+                <div>
+                    笔头半径<br>
+                    <input type="range" name="size" ftm:value="%{size}" min="1" max="5">
+                    %{size}
+                </div>
+                <div>
+                    不透明度<br>
+                    <input name="opacity" type="range" ftm:value="%{opacity}">
+                    %{js:data.opacity+"%"}
+                </div>
+                <button onclick="selectPen()">添加画笔</button>
+            </div>
             <div id="rightBar">
-                <view-opt>clothes true showClothes palegreen</view-opt>
                 <view-opt>arm alex changeArm pink</view-opt>
+                <view-opt>clothes false showClothes lightgrey</view-opt>
+                <view-opt>file true showFileOpr palegreen</view-opt>
+                <view-opt>palette false showPalette lightgrey</view-opt>
             </div>
         </div>
         <div id="footbar" ftm-src>
-            <draw-tool ftm-key="selected">pen 画笔 \s</draw-tool>
-            <draw-tool>eraser 橡皮擦 \s</draw-tool>
-            <draw-tool>straw 吸色器 \s</draw-tool>
-            <draw-tool>water 水渍 \s</draw-tool>
-            <draw-tool>torch 光照 \s</draw-tool>
-            <draw-tool>blackwhite 混合黑白 \s</draw-tool>
-            <draw-tool>change_color 换色器 \s</draw-tool>
-            <draw-tool>horizontal 水平翻转 \s</draw-tool>
-            <draw-tool>vertical 垂直翻转 \s</draw-tool>
-            <draw-tool>copy 复制 \s</draw-tool>
-            <draw-tool>paste 粘贴 \s</draw-tool>
+            <draw-tool ftm-key="selected">pen 画笔</draw-tool>
+            <draw-tool>eraser 橡皮擦</draw-tool>
+            <draw-tool>straw 吸色器</draw-tool>
+            <draw-tool>water 水渍</draw-tool>
+            <draw-tool>torch 光照</draw-tool>
+            <draw-tool>blackwhite 混合黑白</draw-tool>
+            <draw-tool>change_color 换色器</draw-tool>
+            <draw-tool>horizontal 水平翻转</draw-tool>
+            <draw-tool>vertical 垂直翻转</draw-tool>
+            <draw-tool>copy 复制</draw-tool>
+            <draw-tool>paste 粘贴</draw-tool>
         </div>
     </div>
 
