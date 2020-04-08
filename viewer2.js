@@ -5,7 +5,7 @@ var DRAW = document.createElement("canvas"); //全身贴图
 var CTX = DRAW.getContext("2d"); //上面的context
 var RENDER = document.createElement("canvas"); //这个是部分身体贴图，配合DRAW快速绘制
 var RCTX = RENDER.getContext("2d"); //上面的context
-var SCALE = Math.min(screen.width, screen.height) / 35; //小人缩放倍数
+var SCALE = Math.min(screen.width, screen.height) / 40; //小人缩放倍数
 var SKIN_INFO = {}; //皮肤数据
 var SKIN_INFO_LAST;//上次保存的SKIN_INFO，用于验证是否保存。这个是字符串
 var UIINFO; //ui界面数据
@@ -13,42 +13,77 @@ var UNDO_LIST = []; //可以被撤回的步骤
 var REDO_LIST = []; //可以被重做的步骤
 var PAINT = function () { }; //绘制函数
 var TOOL = {}; //正在使用的工具
+var PEN = {}; //正在使用的画笔的数据
 var PALETTE; //选择画笔界面
+var COPIED; //复制的图像的数据数组（不是ImageData）
+var LAST_PEN_POSI; //记录上次画笔位置，避免在一个点重复绘制
+var REF_CANVAS; //参考图取色画布
+var FLIP_CANVAS = document.createElement("canvas"); //翻转图像用画布（技术不行，只能用这个了）
 
 //载入新皮肤
 window.addEventListener("msg", (d) => {
     d = d.detail;
+    console.log(d);
     SKIN_INFO = d;
     SKIN_INFO_LAST = JSON.stringify(d);
+    uploadReference(d.reference);
     MODEL = mobs[d.model];
-    document.getElementById("rightBar").firstElementChild.click();
+    //document.getElementById("rightBar").firstElementChild.click();
     showFileOpr(true);
     showPalette(false);
     showClothes(false);
+    showReference(false);
     changeArm(d.model);
     setTexture(d.texture);
     UNDO_LIST.push([null, CTX.getImageData(0, 0, 64, 64)]);
     document.getElementById("skinName").innerText = d.name;
+
+    let tem = document.getElementById("template");
+    tem.innerHTML = "";
+    (d.templatePens || []).slice().reverse().forEach(x => {
+        let p = JSON.parse(x);
+        let pen = document.createElement("pen-block");
+        pen.ftmData = p;
+        tem.appendChild(pen);
+    });
 });
 
 //首次加载
 function documentLoad() {
     PALETTE = document.getElementById("palettePannel");
+    REF_CANVAS = document.querySelector("#pictureViewer>canvas");
     {
         let headbar = document.getElementById("headbar");
         headbar.addEventListener("actiondragmove", function (ev) {
             ev = ev.detail;
             if (ev.apprDeg == 90 && ev.offset > 7) {
+                ev.end();
                 showFileOpr(false);
             }
         });
         PALETTE.addEventListener("actiondragmove", function (ev) {
             ev = ev.detail;
             if (ev.event.target == PALETTE && ev.apprDeg == 180 && ev.offset > 7) {
+                ev.end();
                 showPalette(false);
             }
         });
-        setTimeout(() => PALETTE.hide());
+        let picv = document.getElementById("pictureViewer");
+        picv.addEventListener("actiondragmove", function (ev) {
+            ev = ev.detail;
+            if (ev.offset > 10) {
+                if (ev.apprDeg == 315) {
+                    picv.setAttribute("zoom", "");
+                } else if (ev.apprDeg == 135) {
+                    picv.removeAttribute("zoom");
+                }
+            }
+        });
+        REF_CANVAS.onclick = refGetColor;
+        setTimeout(() => {
+            PALETTE.hide("leftUI_hide");
+            picv.hide("leftUI_hide");
+        });
     }
 
     UIINFO = document.getElementById("uiinfo").ftmBinds;
@@ -111,17 +146,29 @@ function documentLoad() {
                     let y = Math.floor(ev.offsetY);
                     y = y < 0 ? 0 : (y >= f.clientHeight ? f.clientHeight - 1 : y);
                     //down,move,up
+                    let options = {
+                        fn: PAINT.bind(null, p[0] + x, p[1] + y),
+                        uv: p,
+                        size: u.slice(2, 4),
+                        position: [p[0] + x, p[1] + y]
+                    };
                     if (typeof TOOL[name] == "function") {
-                        TOOL[name](
-                            {
-                                fn: PAINT.bind(null, p[0] + x, p[1] + y),
-                                uv: p,
-                                size: u.slice(2, 3),
-                                position: [p[0] + x, p[1] + y]
-                            }
-                        );
-                    } else if ((name == "down" || name == "move") && TOOL[name] == true) {
-                        PAINT(p[0] + x, p[1] + y);
+                        if (name == "move") {
+                            if ([x, y].join(",") == LAST_PEN_POSI) return;
+                        }
+                        LAST_PEN_POSI = [x, y].join(",");
+                        TOOL[name].call(TOOL, options);
+                    } else if (TOOL[name] == true) {
+                        if (name == "down") {
+                            let fn = function (opt) { opt.fn(); };
+                            TOOL[name] = fn;
+                            fn(options);
+                        } else if (name == "move") {
+                            console.log(4);
+                            LAST_PEN_POSI = [x, y].join(",");
+                            let fn = TOOL[name] = TOOL["down"];
+                            fn.call(TOOL, options);
+                        }
                     }
                     f.style.backgroundImage = "url(" + RENDER.toDataURL() + ")";
                 }
@@ -275,10 +322,66 @@ function changeArm(to) {
     SKIN_INFO.model = to;
 }
 
+//添加参照
+function addReference() {
+    let file = document.getElementById("upl_ref");
+    file.value = "";
+    file.click();
+}
+//上传图片
+function uploadReference(file) {
+    if (typeof file == "string") {
+        read(file);
+    } else if (file instanceof Blob) {
+        let fr = new FileReader();
+        fr.readAsDataURL(file);
+        fr.onload = () => read(fr.result);
+    } else {
+        let div = document.getElementById("pictureViewer");
+        REF_CANVAS.width = "";
+        REF_CANVAS.height = "";
+        div.ftmData.image = null;
+        let s = div.style;
+        s.width = s.height = "";
+    }
+    function read(data) {
+        let img = new Image();
+        img.src = data;
+        img.onload = function () {
+            SKIN_INFO.reference = data;
+            let div = document.getElementById("pictureViewer");
+            let size;
+            let maxSize = [window.screen.width / 3 * 2, window.screen.height / 5 * 2];
+            if (img.width > img.height) {
+                size = [maxSize[0], img.height * maxSize[0] / img.width];
+            } else {
+                size = [img.width * maxSize[1] / img.height, maxSize[1]];
+            }
+            size = size.map(x => Math.round(x));
+
+            REF_CANVAS.width = size[0];
+            REF_CANVAS.height = size[1];
+            let ctx = REF_CANVAS.getContext("2d");
+            ctx.drawImage(img, 0, 0, ...size);
+
+            div.ftmData.image = data;
+            let s = div.style;
+            //s.backgroundImage = "url(" + data + ")";
+            //s.backgroundSize = size.join(" ");
+            s.width = size[0] + "px";
+            s.height = size[1] + "px";
+        };
+        img.onerror = function () {
+            alert("无法加载参考图！");
+        };
+    };
+}
+
 //显示衣物
 function showClothes(show) {
     show = rightBarDo("clothes", show);
     document.body.style.setProperty("--showClothes", show ? "block" : "none");
+    document.body.style.setProperty("--showBody", show ? "none" : "block");
     UIINFO.firstData.showClothes = show;
     //let o = document.getElementById("rightBar").ftmData.selected;
     //showBodyPart(o, o, !show);
@@ -292,11 +395,19 @@ function showFileOpr(show) {
     else bar.hide();
 }
 
+//显示参照
+function showReference(show) {
+    show = rightBarDo("show_ref", show);
+    let vw = document.getElementById("pictureViewer");
+    if (show) vw.show("leftUI_hide");
+    else vw.hide("leftUI_hide");
+}
+
 //显示调色板
 function showPalette(show) {
     show = rightBarDo("palette", show);
-    if (show) PALETTE.show();
-    else PALETTE.hide();
+    if (show) PALETTE.show("leftUI_hide");
+    else PALETTE.hide("leftUI_hide");
 }
 
 //与index的互动
@@ -307,6 +418,7 @@ function skinOpr(event) {
             event,
             save: SKIN_INFO
         });
+        SKIN_INFO_LAST = JSON.stringify(SKIN_INFO);
     } else if (event == "close") {
         if (JSON.stringify(SKIN_INFO) != SKIN_INFO_LAST) {
             let q = prompt("您的工程还未保存，要保存后返回吗？(Y|n|*)");
@@ -384,16 +496,25 @@ function redo() {
     m[0].style.backgroundImage = "url(" + DRAW.toDataURL() + ")";
 }
 
-//处理
+//添加绘图工具
 function drawToolCreate(eve) {
-    Effect(eve.target);
+    let tar = eve.target;
+    Effect(tar);
     //eve.target.addEventListener("touchmove", function (ev) { ev.preventDefault() })
-    eve.target.addEventListener("actiondragmove", function (ev) {
-        let d = ev.detail;
-        if (d.apprDeg == 90 && d.offset > 7) {
-            console.log("out");
-        }
-    });
+    let tool = DrawTools[tar.ftmData.tool];
+    if (tool && tool.modes) {//如果支持多模式
+        tool.mode = 0;
+        tar.addEventListener("actiondragmove", function (ev) {
+            let d = ev.detail;
+            if (d.apprDeg == 90 && d.offset > 9) {
+                d.end();
+                tar.getElementsByTagName("img")[0].click();
+                if (++tool.mode >= tool.modes.length) tool.mode = 0;
+                tar.ftmData.mode = tool.modes[tool.mode];
+                usePen(PEN);
+            }
+        });
+    }
 }
 
 //画板界面
@@ -423,8 +544,6 @@ function usePen(data, dontSet) {
     RCTX.globalCompositeOperation = "source-over";
     RCTX.fillStyle = data.color;
     RCTX.globalAlpha = data.opacity / 100;
-    RCTX.save();
-    TOOL.load();
     PAINT = function (x, y) {
         let sz = data.size;
         if (data.nib == "rect") {
@@ -436,8 +555,39 @@ function usePen(data, dontSet) {
             RCTX.fill();
         }
     };
-    if (!dontSet) PALETTE.ftmData = Object.assign({}, data);
+    TOOL.load.call(TOOL, TOOL.modes ? TOOL.modes[TOOL.mode] : null);
+    PEN = Object.assign({}, data);
+    if (!dontSet) PALETTE.ftmData = PEN;
     //PALETTE.ftmData.color = data.color;
+}
+
+//加载画笔
+function loadPen(el) {
+    Effect(el);
+    el.addEventListener("actiondragmove", function (ev) {
+        ev = ev.detail;
+        if (ev.offset > 9) {
+            let t = document.getElementById("template");
+            let isTem = el.parentNode == t;
+            let data = JSON.stringify(el.ftmData);
+            let ar = SKIN_INFO.templatePens || (SKIN_INFO.templatePens = []);
+            if (ev.apprDeg == 90) {
+                ev.end();
+                if (ar.includes(data)) ar.splice(ar.indexOf(data), 1);
+                ar.push(data);
+                t.insertBefore(el, t.firstElementChild);
+            } else if (ev.apprDeg == 270 && ev.offset > 220) {
+                ev.end();
+                if (isTem && !confirm("要删除这个画笔吗？")) {
+                    return;
+                }
+                if (isTem && ar.includes(data)) {
+                    ar.splice(ar.indexOf(data), 1);
+                }
+                el.parentNode.removeChild(el);
+            }
+        }
+    });
 }
 
 //计算画笔块文字颜色
@@ -456,23 +606,24 @@ down,move,up有传入值，是{
     fn:绘制函数,
     uv:材质起点,
     size:材质大小
-    position:落笔位置
+    position:绝对落笔位置
 }
-down,move如果值为true就是直接执行绘制函数，up则忽略
+down如果值为true就是直接执行绘制函数，move如果是true就使用down,up则忽略
+modes属性是当前工具的所有模式，mode是当前工具模式的下标
+this是工具本身
 */
 const DrawTools = {
     pen: {
-        load: function () { },
         down: true, move: true
     },
     eraser: {
-        load: function () {
-            RCTX.globalCompositeOperation = "destination-out";
+        down: function (opt) {
+            let q = opt.position;
+            RCTX.clearRect(q[0], q[1], 1, 1);
         },
-        down: true, move: true
+        move: true
     },
     straw: {
-        load: function () { },
         down: function (arg) {
             let { position: p } = arg;
             let dt = RCTX.getImageData(p[0], p[1], 1, 1).data;
@@ -482,27 +633,93 @@ const DrawTools = {
             showPalette(true);
         }
     },
+    water: {
+        down: function (arg) {
+            RCTX.fillStyle = Math.random() > 0.5 ? "#00000030" : "#ffffff30";
+            arg.fn();
+        }, move: true
+    },
     torch: {
-        load: function () {
-            RCTX.globalCompositeOperation = "lighter";
+        load: function (m) {
+            RCTX.globalCompositeOperation = m;
             RCTX.globalAlpha /= 4;
         },
-        down: true, move: true
+        down: true, move: true,
+        modes: ["lighter", "multiply"]
+    },
+    blackwhite: {
+        load: function (m) {
+            let color = m == "white" ? "#ffffff10" : "#00000010";
+            RCTX.fillStyle = color;
+        },
+        down: true, move: true,
+        modes: ["white", "black"]
     },
     change_color: {
         load: function () {
             RCTX.globalCompositeOperation = "color";
         },
-        down: true, move: true
+        down: true, move: true,
+    },
+    flip: {
+        load: function () {
+            RCTX.globalCompositeOperation = "copy";
+        },
+        down: function (opt) {
+            let { uv, size } = opt;
+            let ish = this.modes[this.mode] == "vertical" ? -1 : 1;
+            FLIP_CANVAS.width = size[0];
+            FLIP_CANVAS.height = size[1];
+            let fx = FLIP_CANVAS.getContext("2d");
+            fx.globalCompositeOperation = "copy";
+            fx.save();
+            let args = [RENDER, ...uv, ...size, 0, 0, ...size];
+            fx.drawImage(...args);
+            fx.scale(ish, -ish);
+            if (ish == -1) fx.translate(-size[0], 0);
+            else fx.translate(0, -size[1]);
+            fx.drawImage(FLIP_CANVAS, 0, 0);
+            //fx.setTransform(1, 0, 0, 1, 0, 0);
+            RCTX.drawImage(FLIP_CANVAS, 0, 0, ...size, ...uv, ...size);
+            fx.restore();
+            console.log(args);
+        },
+        modes: ["vertical", "horizontal"]
+    },
+    copy: {
+        down: function (opt) {
+            let { uv, size } = opt;
+            let img = new Image();
+            img.src = DRAW.toDataURL();
+            COPIED = [img, ...uv, ...size];
+        }
+    },
+    paste: {
+        down: function (opt) {
+            let { uv, size } = opt;
+            RCTX.drawImage(...COPIED, ...uv, ...size);
+        }
     }
 };
+for (let i in DrawTools) {
+    let m = DrawTools[i];
+    if (m.load === undefined) DrawTools[i].load = function () { };
+}
 
 //选择工具
 function useTool(name) {
     if (TOOL.unload) TOOL.unload();
-    let t = DrawTools[name];
+    let t = typeof name == "string" ? DrawTools[name] : name;
     TOOL = t;
-    RCTX.restore();
-    t.load();
+    usePen(PEN);
 }
 
+//参考图取色
+function refGetColor(ev) {
+    let x = ev.offsetX;
+    let y = ev.offsetY;
+    let dt = REF_CANVAS.getContext("2d").getImageData(x, y, 1, 1).data;
+    PALETTE.ftmData.color = "#" + [...dt.slice(0, 3)].map(x => x.toString(16).padStart(2, "0")).join("");
+    PALETTE.ftmData.opacity = Math.round(dt[3] / 0x100 * 100);
+    showPalette(true);
+}

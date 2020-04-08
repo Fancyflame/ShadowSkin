@@ -3,7 +3,8 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no">
     <title>ShadowSkin</title>
 </head>
 
@@ -19,22 +20,20 @@
     <script src="effect.js"></script>
     <script src="viewer2.js"></script>
     <!--script src="debugger.js"></script-->
-    <script>
-
-
-    </script>
     <ftm-src id="uiinfo" ftm-args="showClothes viewingPart">\s \s</ftm-src>
     <!--画画工具-->
-    <template ftm-el="draw-tool" ftm-args="tool name" ftm-bddata="^" ftm:class="icon"
+    <template ftm-el="draw-tool" ftm-args="tool name mode" ftm-bddata="^" ftm:class="icon"
         ftm-oncreate="drawToolCreate(event)">
-        <img ftm:src="%{js:'pic/'+data.tool+'.png'||''}"
-            ftm:style="background-color:%{js:data.selected==this?'#ffffffd0':'auto'}"
-            ftm::onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;useTool('%{tool}')">
+        <div class="_img" ftm:style="background-color:%{js:data.selected==this?'#ffffffd0':'auto'}">
+            <img ftm:src="%{js:'pic/'+data.tool+(data.mode!==null?'_'+data.mode:'')+'.png'||''}"
+                ftm::onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;useTool('%{tool}')">
+            <div class="_triangle" ftm:style="display: %{js:data.mode!=null?'auto':'none'};"></div>
+        </div>
         <div>%{name}</div>
     </template>
     <!--短按按钮-->
     <template ftm-el="st-btn" ftm-args="icon name active" ftm-bddata="^" ftm:class="icon">
-        <img ftm:src="%{js:'pic/'+data.icon+'.png'||''}" ftm:onclick="%{active}">
+        <img ftm:src="%{js:'pic/'+data.icon+'.png'||''}" ftm::onclick="%{active}">
         <div>%{name}</div>
     </template>
     <!--身体部位选择-->
@@ -47,13 +46,20 @@
         <img ftm:src="pic/%{view}.png" ftm:style="background-color:%{color}">
     </template>
     <!--画笔块-->
-    <template ftm-el="pen-block" ftm-args="color nib size opacity"
-        ftm:style="background:%{color};color:%{js:calcColor(data.color)}" ftm:onclick="usePen(this.ftmData)">
+    <template ftm-el="pen-block" ftm-args="color nib size opacity" ftm-oncreate="loadPen(this)"
+        ftm:style="background:%{color};color:%{js:calcColor(data.color)};border-radius:%{js:data.nib=='rect'?'5px':'100cm'}"
+        ftm:onclick="usePen(this.ftmData)">
         <span>%{js:data.nib[0].toUpperCase()}%{size}</span><br>
         <span>%{opacity}</span>
     </template>
-
     <div>
+        <div id="pictureViewer" effect-handle ftm-src ftm-args="image">
+            <pre ftm-data></pre>
+            <div ftm:style="display:%{js:data.image?'none':'auto'}">
+                还没有上传参考图片喔，在 文件-添加参考 上传
+            </div>
+            <canvas></canvas>
+        </div>
         <div id="colorbar">
             <div id="template"></div>
             <div id="history">
@@ -67,7 +73,7 @@
             <st-btn>download 导出皮肤 outputFile('skin')</st-btn>
             <st-btn>output 导出工程 outputFile('project')</st-btn>
             <st-btn>trash 删除 skinOpr('delete')</st-btn>
-            <st-btn>add_ref 添加参照 \s</st-btn>
+            <st-btn>add_ref 添加参照 addReference()</st-btn>
         </div>
         <div id="head2">
             <div id="skinName" contenteditable onkeypress="if(event.key=='Enter')this.blur()" onblur="rename(this);">
@@ -116,6 +122,7 @@
                 <view-opt>arm alex changeArm pink</view-opt>
                 <view-opt>clothes false showClothes lightgrey</view-opt>
                 <view-opt>file true showFileOpr palegreen</view-opt>
+                <view-opt>show_ref false showReference lightgrey</view-opt>
                 <view-opt>palette false showPalette lightgrey</view-opt>
             </div>
         </div>
@@ -124,14 +131,14 @@
             <draw-tool>eraser 橡皮擦</draw-tool>
             <draw-tool>straw 吸色器</draw-tool>
             <draw-tool>water 水渍</draw-tool>
-            <draw-tool>torch 光照</draw-tool>
-            <draw-tool>blackwhite 混合黑白</draw-tool>
+            <draw-tool>torch 光照 lighter</draw-tool>
+            <draw-tool>blackwhite 混合黑白 white</draw-tool>
             <draw-tool>change_color 换色器</draw-tool>
-            <draw-tool>horizontal 水平翻转</draw-tool>
-            <draw-tool>vertical 垂直翻转</draw-tool>
+            <draw-tool>flip 翻转面 vertical</draw-tool>
             <draw-tool>copy 复制</draw-tool>
             <draw-tool>paste 粘贴</draw-tool>
         </div>
+        <input type="file" style="display: none;" id="upl_ref" onchange="uploadReference(this.files[0])">
     </div>
 
 </body>

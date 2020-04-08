@@ -6,8 +6,8 @@ let Effect;
     function _Effect(el) {
         if (el instanceof HTMLElement) {
             el.hide = function (name) {
+                el.setAttribute("Hiding", "true");
                 el.style.animationName = name || (el.id || "") + "_hide";
-                el.setAttribute("Hidden", "true");
                 el.setAttribute(head("Disappearing"), "");
                 el.addEventListener("animationend", function () {
                     el.removeAttribute(head("Disappearing"));
@@ -16,10 +16,10 @@ let Effect;
                 }, { once: true });
             };
             el.show = function (name) {
+                el.removeAttribute("Hiding");
                 el.style.animationName = name || (el.id || "") + "_hide";
                 el.setAttribute(head("Entering"), "");
                 el.removeAttribute(head("EffectHidden"));
-                el.removeAttribute("Hidden");
                 el.addEventListener("animationend", function () {
                     el.removeAttribute(head("Entering"));
                     el.removeAttribute(head("EffectHidden"));
@@ -60,7 +60,7 @@ let Effect;
                         detail: {
                             outOfEle, angle, apprDeg, offset, x, y,
                             event: ev, start: [sx, sy],
-                            end: () => down = false
+                            end: () => { down = false; }
                         }
                         /*
                         {
@@ -72,6 +72,7 @@ let Effect;
                             y:offsetY
                             target:产生源事件
                             start:光标开始按下的位置
+                            end:此次停止响应
                         }
                         */
                     });
