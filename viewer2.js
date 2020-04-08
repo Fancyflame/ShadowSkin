@@ -641,11 +641,11 @@ const DrawTools = {
     },
     torch: {
         load: function (m) {
-            RCTX.globalCompositeOperation = m;
+            RCTX.globalCompositeOperation = m == "lighter" ? "color-dodge" : "color-burn";
             RCTX.globalAlpha /= 4;
         },
         down: true, move: true,
-        modes: ["lighter", "multiply"]
+        modes: ["lighter", "darker"]
     },
     blackwhite: {
         load: function (m) {
