@@ -35,6 +35,8 @@ window.addEventListener("msg", (d) => {
     showReference(false);
     changeArm(d.model);
     setTexture(d.texture);
+    UNDO_LIST = [];
+    REDO_LIST = [];
     UNDO_LIST.push([null, CTX.getImageData(0, 0, 64, 64)]);
     document.getElementById("skinName").innerText = d.name;
 
@@ -138,13 +140,19 @@ function documentLoad() {
                 let u = posi[i];
                 let p = [uv[0] + u[0], uv[1] + u[1]]; //材质定位
 
+                down = false;//画笔落下
                 //画！
                 function mousemove(ev, name) {
+                    if (!down) return;
                     //ev.preventDefault()
                     let x = Math.floor(ev.offsetX);
                     x = x < 0 ? 0 : (x >= f.clientWidth ? f.clientWidth - 1 : x);
                     let y = Math.floor(ev.offsetY);
                     y = y < 0 ? 0 : (y >= f.clientHeight ? f.clientHeight - 1 : y);
+                    if (TOOL.protect) {//透明保护
+                        let dt = RCTX.getImageData(p[0] + x, p[1] + y, 1, 1).data[3];
+                        if (dt == 0) return;
+                    }
                     //down,move,up
                     let options = {
                         fn: PAINT.bind(null, p[0] + x, p[1] + y),
@@ -174,6 +182,7 @@ function documentLoad() {
                 }
                 f.onpointerdown = (ev) => {
                     ev.preventDefault();
+                    down = true;
                     //RCTX.fillStyle = "red";
                     RCTX.clearRect(0, 0, 64, 64);
                     RCTX.putImageData(CTX.getImageData(p[0], p[1], f.clientWidth, f.clientHeight), p[0], p[1]);
@@ -182,6 +191,7 @@ function documentLoad() {
                 //f.ontouchmove = (ev) => { };
                 f.onpointermove = (ev) => mousemove(ev, "move");
                 f.ontouchend = () => {
+                    down = false;
                     CTX.putImageData(RCTX.getImageData(p[0], p[1], f.clientWidth, f.clientHeight), p[0], p[1]);
                     SKIN_INFO.texture = DRAW.toDataURL();
                     UNDO_LIST.push([f, CTX.getImageData(0, 0, 64, 64)]);
@@ -637,7 +647,8 @@ const DrawTools = {
         down: function (arg) {
             RCTX.fillStyle = Math.random() > 0.5 ? "#00000030" : "#ffffff30";
             arg.fn();
-        }, move: true
+        }, move: true,
+        protect: true
     },
     torch: {
         load: function (m) {
@@ -645,7 +656,8 @@ const DrawTools = {
             RCTX.globalAlpha /= 4;
         },
         down: true, move: true,
-        modes: ["lighter", "darker"]
+        modes: ["lighter", "darker"],
+        protect: true
     },
     blackwhite: {
         load: function (m) {
@@ -653,13 +665,22 @@ const DrawTools = {
             RCTX.fillStyle = color;
         },
         down: true, move: true,
-        modes: ["white", "black"]
+        modes: ["white", "black"],
+        protect: true
+    },
+    saturation: {
+        load: function () {
+            RCTX.globalCompositeOperation = "saturation";
+        },
+        down: true, move: true,
+        protect: true
     },
     change_color: {
         load: function () {
             RCTX.globalCompositeOperation = "color";
         },
         down: true, move: true,
+        protect: true
     },
     flip: {
         load: function () {
