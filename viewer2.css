@@ -93,6 +93,8 @@ body>div>div {
     height: 10vh;
     background-color: #eee;
     height: 13vh;
+    overflow-x: scroll;
+    overflow-y: hidden;
 }
 
 #colorbar>div {
