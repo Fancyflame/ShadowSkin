@@ -1,4 +1,3 @@
-
 /*
     FastTemplate
     Author:FancyFlame
@@ -606,8 +605,7 @@ mutobs.observe(document.documentElement, {
     subtree: true
 });
     /*window.addEventListener("load", () => {
-        DOMchange({
-            addedNodes: [document.documentElement]
-        });
-    });*/
-}
+DOMchange({
+    addedNodes: [document.documentElement]
+});
+});*/
