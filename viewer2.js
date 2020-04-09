@@ -687,6 +687,9 @@ const DrawTools = {
         modes: ["vertical", "horizontal"]
     },
     copy: {
+        load: function () {
+            RCTX.globalAlpha = 1;
+        },
         down: function (opt) {
             let { uv, size } = opt;
             let img = new Image();
@@ -695,6 +698,9 @@ const DrawTools = {
         }
     },
     paste: {
+        load: function () {
+            RCTX.globalAlpha = 1;
+        },
         down: function (opt) {
             let { uv, size } = opt;
             RCTX.drawImage(...COPIED, ...uv, ...size);
