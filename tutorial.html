@@ -1,233 +1,147 @@
 <!DOCTYPE HTML>
 <html>
-  <head>
+
+<head>
     <!--meta name="theme-color" content=""-->
-    <meta content="text/html; charset=utf-8" http-equiv="content-type"/>                                                     
+    <meta content="text/html; charset=utf-8" http-equiv="content-type" />
     <!--meta content="user-scalable=0;" name="viewport" /-->
     <title>ShadowSkin - Tutorial</title>
-  </head>
-  <body onload="load_()">
+</head>
+
+<body oonload="">
     <style>
-    html,body{
-        height:100%;
-        margin:0;
-        padding-left:5vw;
-        padding-right:5vw;
-        /*background-color:#fefffe;*/
-        background:white;
-    }
-    *{
-        font-size:100%;
-        color:black;
-    }
-    blockquote{
-        color:dimgrey;
-        border-left:0.4em solid dimgrey;
-        padding:0 0.4em;
-        line-height:3.2em;
-    }
-    blockquote::first-letter{
-        font-size:3.5em;
-        color:#555;
-    }
-    mark{
-        border-radius:0.1em;
-        background:yellowgreen;
-        padding:0.2em;
-        font-weight:bold;
-    }
-    hint{
-        padding-left:1em;
-        border-left:0.4em solid goldenrod;
-        background-color:#ff9;
-        margin-top:3em;
-        display:block;
-    }
-    hint,hint *{
-        color:#660;
-    }
-    h1,h2,h3{
-        text-align:left;
-        padding-left:5vw;
-        font-size:5em;
-        text-shadow:-2px 1px 7px grey;
-        border-left:0.4em solid yellowgreen;
-        /*border-left-image:*/
-    }
-    a,ul,ol{
-        /*color:green;*/
-    }
-    p,blockquote,hint{
-        font-size:2em;
-    }
-    img{
-        margin:4em 0;
-        display:block;
-        width:100%;
-        box-shadow:0 0 5em -2em dimgrey;
-    }
-    #penblock{
-        border-radius:3vw;
-        width:50vw;
-        height:50vw;
-        background-color:blue;
-        text-align:center;
-        font-size:12vw;
-        line-height:25vw;
-        color:white;
-        transition:all .6s;
-        margin:auto;
-    }
-    #penblock:hover{
-        background-color:deepskyblue;
-        color:#555;
-    }
-    table{
-        font-size:1.6em;
-        box-shadow:0 0 4em -2em dimgrey;
-        border-collapse: collapse;
-        color:green;
-        table-layout:fixed;
-        width:100%;
-    }
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding-left: 5vw;
+            padding-right: 5vw;
+            /*background-color:#fefffe;*/
+            background: white;
+        }
+
+        * {
+            font-size: 100%;
+            color: black;
+        }
+
+        blockquote {
+            color: dimgrey;
+            border-left: 0.4em solid dimgrey;
+            padding: 0 0.4em;
+            line-height: 3.2em;
+        }
+
+        blockquote::first-letter {
+            font-size: 3.5em;
+            color: #555;
+        }
+
+        mark {
+            border-radius: 0.1em;
+            background: yellowgreen;
+            padding: 0.2em;
+            font-weight: bold;
+        }
+
+        hint {
+            padding-left: 1em;
+            border-left: 0.4em solid goldenrod;
+            background-color: #ff9;
+            margin-top: 3em;
+            display: block;
+        }
+
+        hint,
+        hint * {
+            color: #660;
+        }
+
+        h1,
+        h2,
+        h3 {
+            text-align: left;
+            padding-left: 5vw;
+            font-size: 5em;
+            text-shadow: -2px 1px 7px grey;
+            border-left: 0.4em solid yellowgreen;
+            /*border-left-image:*/
+        }
+
+        p,
+        blockquote,
+        hint {
+            font-size: 2em;
+            line-height: 250%;
+            font-weight: lighter;
+        }
+
+        img {
+            margin: 4em 0;
+            display: block;
+            width: 100%;
+            box-shadow: 0 0 5em -2em dimgrey;
+        }
+
+        #penblock:hover {
+            background-color: deepskyblue;
+            color: #555;
+        }
+
+        table {
+            font-size: 1.6em;
+            box-shadow: 0 0 4em -2em dimgrey;
+            border-collapse: collapse;
+            color: green;
+            table-layout: fixed;
+            width: 100%;
+        }
     </style>
     <h1>ShadowSkin教程</h1>
-    <blockquote>
-        这是ShadowSkin的新手教程。然而，ShadowSkin的用法非常简单，
-        你大可不必观看教程即可开始您的第一个项目。本文仅提示
-        难以理解的相关操作
-    </blockquote>
-    编辑器页面在后续版本里还会继续更新，那教程总不能
+    <p>
+        这是ShadowSkin2的新手教程。shadowskin2的ui简洁易懂，所以这里
+        只介绍手势操作。<br>
+        编辑器页面在后续版本里还会继续更新，那教程总不能
         更新一下换一次吧。那就凑合一下咯！
-    <h3>目录</h3>
-    <ol>
-        <li><a href="#summary">概述</a></li>
-        <li><a href="#index">管理界面</a></li>
-        <li><a href="#viewer">视图界面</a></li>
-        <li><a href="#editor">编辑界面</a></li>
-        <li><a href="#end">结束</a></li>
-    </ol>
-    <h3 id="summary">概述</h3>
-    <blockquote>
-        ShadowSkin是一个基于HTML的关于Minecraft的皮肤编辑器。<br>
-        如果您不知道Minecraft是啥，那我也不知道你下载了这玩意做什么用QAQ
-        <br><br>
-        ShadowSkin开发的目的就是在移动客户端上搭建一个轻量级的
-        皮肤编辑器。<br>它有<b>加光，色相，水渍等工具；三种笔头，可调半径等
-        </b>画笔设置。它的预览您将会在编辑页面章节看到
-        <br>
-    </blockquote>
-    <br>作者：FancyFlame
-        <u><br>没有用任何非原创类库</u>
-        <br><strong>如果有BUG或者好的建议，请发到我邮箱
-        fancyflame@163.com或者在github提个issue。谢谢!</strong>
-    
-    <h3 id="index">管理页面</h3>
-    <blockquote>
-        这是一个图例，不是瞎子都能看得懂<br>
-        主页面操作很少，重命名等操作尽在视图界面
-    </blockquote>
-    <img src="pic/tutorial/index_screenshot.jpg">
-    
-    <h3 id="viewer">视图界面</h3>
-    <blockquote>
-        视图界面操作比较多，一张图解释不过来<br>
-        多来几张拼凑一下。
-    </blockquote>
-    <img src="pic/tutorial/viewer_1.jpg">
-    <img src="pic/tutorial/viewer_2.jpg">
-    <img src="pic/tutorial/viewer_3.jpg">
-    
-    <h3 id="editor">编辑界面</h3>
-    <blockquote>
-        编辑页面是比较难懂的，这张图是基本操作
-    </blockquote>
-    <img src="pic/tutorial/editor_1.jpg">
-    <blockquote>
-        你一定注意到了这个家伙吧？<br>
-        接下来我们会解释它
-    </blockquote>
-    <div id="penblock">C3<br>36</div>
-    <blockquote>
-        这定义了一个画笔。
-        每次保存新画笔时都会在历史记录画笔里添加一个对应画笔。
-        点击它们来使用。<br>
+    </p>
+    <h3>简短说一下</h3>
+    <p>
+        ShadowSkin是基于<strong>手机版</strong>的！pc端目前还没有做，不过PC端已经有Skin3d了，所以呢就用那个吧。如果你是ShadowSkin的忠实粉丝，那你也可以按F12打开
+        开发者模式，左上角有手机版模拟器。再次声明，PC端是完全无法使用的！<br>
+        ShadowSkin使用GPL3.0许可，您的一切行为需要遵守GPL3.0的协议。如果您仅使用，可以忽略它。如果您需要转载，请注明作者，并且<strong>保持开源</strong>。所以还是
+        不要魔改了吧。保留所有权利。<br>
+    </p>
+    <h3>开始教程</h3>
+    <p>
+        右侧栏是显示用的。这边展示了三个隐藏的UI界面。（可能有点动画异常，后期会修复)
+        <img src="tutorial_pic/show_ui.gif">
+        手指往UI弹出的地方往回拖能收回面板，但是参照图的不行。
+        <img src="tutorial_pic/fast_close.gif">
+        手指往右下角拖能放大参照图。
+        <img src="tutorial_pic/zoom.gif">
+        点击参照图能取色。
+        <img src="tutorial_pic/get_color.gif">
+        手指滑动编辑面板的<strong>空白部位</strong>能拖动模型旋转查看。但不能平移和缩放。
+        <img src="tutorial_pic/view_model.gif">
+        右上角有三角形的是多模式工具。上划可切换模式。
+        <img src="tutorial_pic/change_mode.gif">
+        画笔上划可以将画笔储存为模板画笔（上面一行），下划长距离则是删除。如果在模板画笔里面上划，将会移动到第一位。
+        <img src="tutorial_pic/set_pen.gif">
+        看下面这张图
+        <img src="tutorial_pic/pen_block.jpg">
         <ul>
-            <li>它的背景颜色对应它的颜色</li>
-            <li>
-                C3代表半径为3的圆形笔
-                <ul>
-                    <li>S:square - 方形笔</li>
-                    <li>C:circle - 圆形笔</li>
-                    <li>R:radiation - 辐射笔</li>
-                </ul>
-            </li>
-            <li>36是它的不透明度，即36%，接近透明</li>
+            <li>R代表Rectangle，为矩形笔头。另外C是Circle，为圆形笔头</li>
+            <li>1代表半径为1</li>
+            <li>100代表不透明度是100</li>
+            <li>背景色就是当前画笔颜色</li>
+            <li>圆角矩形也代表这是矩形笔头，圆形就代表圆形笔头</li>
         </ul>
-        例如：R1 100就是一个半径为1且不透明的辐射笔<br><br>
-        <b>拖动</b>历史记录画笔里的画笔到<b>模板画笔</b>里，
-        使它能够被保存，否则在您下次编辑的时候
-        它们就会被清除
-    </blockquote>
-    <img src="pic/tutorial/editor_pen_1.jpg">
-    <img src="pic/tutorial/editor_pen_2.jpg">
-        <table border="2">
-            <captain>工具的用法</captain>
-            <tr>
-                <th>工具</th>
-                <th>释义</th>
-                <th>属性</th>
-            </tr>
-            <tr>
-                <td>画笔</td>
-                <td>绘制图案</td>
-                <td>通过修改画笔数据更改</td>
-            </tr>
-            <tr>
-                <td>橡皮擦</td>
-                <td>只能使用单块擦除，因为minecraft不支持半透明</td>
-                <td>不可更改，只能用块</td>
-            </tr>
-            <tr>
-                <td>吸色器</td>
-                <td>
-                    提取当前部位的颜色到画笔，但保留上一次画笔的
-                    半径，笔头形状
-                </td>
-                <td>不可更改</td>
-            </tr>
-            <tr>
-                <td>水渍</td>
-                <td>随机添加减少明度</td>
-                <td>通过选择模式和画笔更改水渍范围，但不能调颜色</td>
-            </tr>
-            <tr>
-                <td>光照</td>
-                <td>
-                    局部光影调节
-                    <ul>
-                        <li>增亮：颜色减淡效果(color-dodge)，过度使用会变白色</li>
-                        <li>吸光：颜色加深效果(color-burn)，过度使用会变黑色</li>
-                        可以使用黑色或白色颜色笔调节白色混合度，以及
-                        使用背景相近色来造成曝光和反曝光效果
-                    </ul>
-                </td>
-                <td>
-                    使用全部画笔设置，颜色参数将影响加深/减淡的颜色趋势
-                </td>
-            </tr>
-            <tr>
-                <td>改色</td>
-                <td>修改色相</td>
-                <td>使用画笔的颜色替换绘制部位的颜色</td>
-            </tr>
-        </table>
-    哎，别忘了这底下还有！
-    <img src="pic/tutorial/editor_more_tools.jpg">
-    <h3 id="end">结束</h3>
-    <blockquote>
+    </p>
+
+    <p>
         那么，教程到这里就结束了。如果还有不懂<br>
-        那只能怪你理解力不好咯！
-    </blockquote>
-  </body>
+        那我也没办法了QAQ
+    </p>
+</body>
+
 </html>
