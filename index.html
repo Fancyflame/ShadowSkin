@@ -17,6 +17,7 @@
     <script src="hframe.js" defer></script>
     <script src="mobs.js"></script>
     <script src="pic.js"></script>
+    <script src="effect.js"></script>
     <style>
         html,
         body {
@@ -129,6 +130,48 @@
 
         h-frame {
             background: white;
+        }
+
+        /*加载页面*/
+        #loading {
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            background-color: white;
+            position: fixed;
+            animation-duration: .4s;
+        }
+
+        #loading>* {
+            position: absolute;
+            font-size: large;
+            font-weight: lighter;
+            color: dimgray;
+        }
+
+        #loading>:first-child {
+            left: 10%;
+            top: 35%;
+        }
+
+        #loading>:nth-child(2) {
+            right: 10%;
+            top: 45%;
+        }
+
+        #loading>:last-child {
+            width: 100%;
+            top: 80%;
+            display: inline-block;
+            text-align: center;
+            color: black;
+            font-weight: normal;
+        }
+
+        @keyframes loading_hide {
+            to {
+                opacity: 0;
+            }
         }
     </style>
     <script>
@@ -364,6 +407,11 @@
                 let name=(Math.random()*(10**15)).toString(36).slice(0,8);
                 setSkin({name:name});
             }*/
+            {
+                let loading = document.getElementById("loading");
+                Effect(loading);
+                loading.hide();
+            }
             try {
                 if (b64sk.raw.creeper) setSkin({
                     name: "creeper",
@@ -453,6 +501,11 @@
             return n;
         }
     </script>
+    <div id="loading">
+        <span>耐心和持久胜过激烈和狂热</span>
+        <span>---拉·封丹(法)</span>
+        <span>加载中，请稍后...</span>
+    </div>
     <h-frame id="viewer" style="display:none;background:white;" src="viewer2.html"></h-frame>
     <div id="GUI">
         <div id="headbar">ShadowSkin</div>
