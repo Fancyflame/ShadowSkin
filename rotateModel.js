@@ -130,7 +130,6 @@ function addTouchHandle(parent, allowBubble = true) {
       mmousemove: move,
       touchend: end,
       mmouseup: end,
-      touchcancel: end,
       mmouseleave: end
     };
     for (let i in events) {
