@@ -48,6 +48,8 @@ window.addEventListener("msg", (d) => {
         pen.ftmData = p;
         tem.appendChild(pen);
     });
+
+    document.getElementById("history").firstElementChild.click();
 });
 
 //首次加载
@@ -463,18 +465,18 @@ function outputFile(type) {
     let a = document.createElement("a");
     a.download = SKIN_INFO.name + "." + (type == "skin" ? "png" : "json");
     if (!confirm("要导出" + (type == "skin" ? "皮肤" : "工程") + "吗？")) return;
+    let s;
     if (type == "skin") {
-        let s = DRAW.toDataURL();
-        a.href = s;
-        a.click();
+        s = DRAW.toBlob();
     } else {
-        let s = JSON.stringify(SKIN_INFO);
+        s = JSON.stringify(SKIN_INFO);
         s = new Blob([s], { type: "application/octet-stream" });
-        s = URL.createObjectURL(s);
-        a.href = s;
-        a.click();
-        URL.revokeObjectURL(s);
     }
+    s = URL.createObjectURL(s);
+    a.href = s;
+    a.click();
+    URL.revokeObjectURL(s);
+
 }
 
 //改名
@@ -563,6 +565,8 @@ function usePen(data, dontSet) {
             RCTX.beginPath();
             RCTX.arc(x, y, sz, 0, Math.PI * 2);
             RCTX.fill();
+        } else if (data.nib == "all") {
+            RCTX.fillRect(0, 0, 64, 64);
         }
     };
     TOOL.load.call(TOOL, TOOL.modes ? TOOL.modes[TOOL.mode] : null);

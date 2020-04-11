@@ -21,11 +21,11 @@
         box-shadow:0px 0px 15px -2px dimgrey;
         color:white;
         font-weight:bold;
-        width:120px;
-        height:120px;
+        width:10vmin;
+        height:10vmin;
         position:fixed;
         z-index:9999;
-        font-size:40px;
+        font-size:5vmin;
     `;
         {
             let posi = function () {
@@ -87,6 +87,7 @@
       bottom:0px;
       display:none;
       overflow-y:scroll;
+      z-index:9999;
     `;
 
 

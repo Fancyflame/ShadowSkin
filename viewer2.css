@@ -325,6 +325,7 @@ input[type=range]::-webkit-slider-runnable-track {
 
 .cube3d {
     image-rendering: pixelated;
+    image-rendering: crisp-edges;
     transition: .2s all linear;
 }
 
@@ -341,12 +342,12 @@ input[type=range]::-webkit-slider-runnable-track {
 .icon {
     height: 100%;
     flex: 0 0 auto;
-    width: 10vw;
+    width: max-content;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 12px;
+    margin: 6px;
     position: relative;
 }
 

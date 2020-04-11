@@ -35,7 +35,7 @@ function addTouchHandle(parent, allowBubble = true) {
       let out = [];//最终输出
       {
 
-        let a = ev.touches[0];
+        let a = ev.touches ? ev.touches[0] : ev;
         lm = mov.slice();
         mov = mov.map((x) => {
           if (x > 1) return x - 1;
@@ -129,7 +129,9 @@ function addTouchHandle(parent, allowBubble = true) {
       touchmove: move,
       mmousemove: move,
       touchend: end,
-      mmouseup: end
+      mmouseup: end,
+      touchcancel: end,
+      mmouseleave: end
     };
     for (let i in events) {
       parent.addEventListener(i, events[i]);

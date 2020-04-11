@@ -1,7 +1,10 @@
 let Effect;
 {
-    const header = "_" + Math.round(Math.random() * (36 ** 5)).toString(36).padStart(5, "0");
-    const head = (s) => header + s;
+    var header = "_" + Math.round(Math.random() * (36 ** 5)).toString(36).padStart(5, "0");
+    //const head = (s) => 
+    function head(s) {
+        return header + s;
+    }
 
     function _Effect(el) {
         if (el instanceof HTMLElement) {

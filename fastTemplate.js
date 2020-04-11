@@ -1,7 +1,6 @@
-/*
-    FastTemplate
-    Author:FancyFlame
-*/
+let sihdah;
+//    FastTemplate
+//    Author:FancyFlame
 let FTM;
 const templates = {};
 const DataSource = function (node, once) {
@@ -224,9 +223,15 @@ const Binds = function (node) {
                 case "js:":
                     let stacks = 1;//记录大括号
                     let quotes = null;
-                    let reg2 = /(?<!\\)[`"'\/]|[{}]/g;
+                    let reg2 = /(?:(\\\\|[^\\])[`"'\/])|[{}]/g;
                     while (true) {
-                        let spliter = reg2.exec(rest)[0];
+                        let spliter = reg2.exec(rest);
+                        if (spliter[1]) {//是引号
+                            reg2.lastIndex -= spliter[1].length;
+                            spliter = spliter[0].slice(spliter[1].length);
+                        } else {//是括号
+                            spliter = spliter[0];
+                        }
                         if (!spliter) break;//括号未闭合
                         if (/["'`\/]/.test(spliter)) {
                             //是引号
@@ -242,7 +247,20 @@ const Binds = function (node) {
                                     if (type == "glb-js:") blocks.push([startIndex, ctt, "##javascript"]);
                                     else {
                                         let raw = ctt.slice(ctt.indexOf(":") + 1, -1);
-                                        let detect = raw.match(/(?<=(?<![\w\$])data\.)([\w\$]+)/g);
+                                        //Safari不支持matchAll
+                                        let a = (function () {
+                                            let reg = /((?:\b|\.)data\.)[\w\$]+/g;
+                                            let result = [];
+                                            while (true) {
+                                                let r = reg.exec(raw);
+                                                if (r === null) break;
+                                                result.push(r);
+                                            }
+                                            return result;
+                                        })();
+                                        let detect = a.map(x => {
+                                            return x[0].slice(x[1].length);
+                                        });
                                         blocks.push([startIndex, ctt, detect]);
                                     }
                                     reg.lastIndex += ctt.length - 2;
@@ -604,8 +622,6 @@ mutobs.observe(document.documentElement, {
     childList: true,
     subtree: true
 });
-    /*window.addEventListener("load", () => {
-DOMchange({
-    addedNodes: [document.documentElement]
+window.addEventListener("load", () => {
+    DOMchange(document.documentElement, null, true);
 });
-});*/

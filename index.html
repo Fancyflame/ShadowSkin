@@ -320,7 +320,8 @@
                         save(d.save);
                         break;
                     case "copy":
-                        let info = Object.assign({ name: d.name }, e.getInfo());
+                        let info = Object.assign({}, e.getInfo());
+                        info.name = d.name;
                         setSkin(info, true);
                         break;
                     case "delete":

@@ -11,7 +11,8 @@
 <body onload="documentLoad()">
     <link href="cube.css" rel="stylesheet">
     <link href="viewer2.css" rel="stylesheet">
-    <!--script src="debugger.js"></script-->
+    <script src="eruda.min.js"></script>
+    <script>eruda.init()</script>
     <script src="blocks3.js"></script>
     <script src="hframe.js"></script>
     <script src="mobs.js"></script>
@@ -20,7 +21,6 @@
     <script src="fastTemplate.js"></script>
     <script src="effect.js"></script>
     <script src="viewer2.js"></script>
-    <!--script src="debugger.js"></script-->
     <ftm-src id="uiinfo" ftm-args="showClothes viewingPart">\s \s</ftm-src>
     <!--画画工具-->
     <template ftm-el="draw-tool" ftm-args="tool name mode" ftm-bddata="^" ftm:class="icon"
@@ -64,7 +64,7 @@
         <div id="colorbar">
             <div id="template"></div>
             <div id="history">
-                <pen-block>#0e7af9 rect 1 100</pen-block>
+                <pen-block>#000000 rect 1 100</pen-block>
             </div>
         </div>
         <div id="headbar" effect-handle>
@@ -106,6 +106,7 @@
                 <select name="nib" ftm:value="%{nib}">
                     <option value="rect">矩形笔尖</option>
                     <option value="circle">圆形笔尖</option>
+                    <option value="all">颜料漆桶</option>
                 </select>
                 <div>
                     笔头半径<br>
