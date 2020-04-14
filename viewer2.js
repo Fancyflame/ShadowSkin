@@ -37,7 +37,9 @@ window.addEventListener("msg", (d) => {
     setTexture(d.texture);
     UNDO_LIST = [];
     REDO_LIST = [];
-    UNDO_LIST.push([null, CTX.getImageData(0, 0, 64, 64)]);
+    setTimeout(function () {
+        UNDO_LIST.push([null, CTX.getImageData(0, 0, 64, 64)]);
+    });
     document.getElementById("skinName").innerText = d.name;
 
     let tem = document.getElementById("template");

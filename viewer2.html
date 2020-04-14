@@ -28,7 +28,6 @@
         <div class="_img" ftm:style="background-color:%{js:data.selected==this?'#ffffffd0':'auto'}">
             <img ftm:src="%{js:'pic/'+data.tool+(data.mode!==null?'_'+data.mode:'')+'.png'||''}"
                 ftm::onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;useTool('%{tool}')">
-            <div class="_triangle" ftm:style="display: %{js:data.mode!=null?'auto':'none'};"></div>
         </div>
         <div>%{name}</div>
     </template>
