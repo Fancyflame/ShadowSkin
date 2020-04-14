@@ -469,16 +469,18 @@ function outputFile(type) {
     if (!confirm("要导出" + (type == "skin" ? "皮肤" : "工程") + "吗？")) return;
     let s;
     if (type == "skin") {
-        s = DRAW.toBlob();
+        s = DRAW.toDataURL();
+
     } else {
         s = JSON.stringify(SKIN_INFO);
         s = new Blob([s], { type: "application/octet-stream" });
+        s = URL.createObjectURL(s);
+        setTimeout(function () {
+            URL.revokeObjectURL(s);
+        });
     }
-    s = URL.createObjectURL(s);
     a.href = s;
     a.click();
-    URL.revokeObjectURL(s);
-
 }
 
 //改名
