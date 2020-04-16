@@ -11,8 +11,8 @@
 <body onload="documentLoad()">
     <link href="cube.css" rel="stylesheet">
     <link href="viewer2.css" rel="stylesheet">
-    <!--script src="eruda.min.js"></script>
-    <script>eruda.init()</script-->
+    <script src="eruda.min.js"></script>
+    <script>eruda.init()</script>
     <script src="blocks3.js"></script>
     <script src="hframe.js"></script>
     <script src="mobs.js"></script>
@@ -26,6 +26,9 @@
     <template ftm-el="draw-tool" ftm-args="tool name mode" ftm-bddata="^" ftm:class="icon"
         ftm-oncreate="drawToolCreate(event)">
         <div class="_img" ftm:style="background-color:%{js:data.selected==this?'#ffffffd0':'auto'}">
+            <div class="_triangle" ftm:style="display:%{js:data.mode===null?'none':'block'}">
+                <!--小三角-->
+            </div>
             <img ftm:src="%{js:'pic/'+data.tool+(data.mode!==null?'_'+data.mode:'')+'.png'||''}"
                 ftm::onclick="this.ftmObs.parentNode.ftmData.selected=this.ftmObs;useTool('%{tool}')">
         </div>
@@ -132,7 +135,8 @@
             <draw-tool>eraser 橡皮擦</draw-tool>
             <draw-tool>straw 吸色器</draw-tool>
             <draw-tool>water 水渍</draw-tool>
-            <draw-tool>torch 光照 lighter</draw-tool>
+            <draw-tool>torch 柔光 dodge</draw-tool>
+            <draw-tool>highlight 曝光 lighter</draw-tool>
             <draw-tool>blackwhite 混合黑白 white</draw-tool>
             <draw-tool>saturation 饱和工具</draw-tool>
             <draw-tool>change_color 换色器</draw-tool>

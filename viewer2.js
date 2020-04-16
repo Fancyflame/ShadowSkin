@@ -470,7 +470,6 @@ function outputFile(type) {
     let s;
     if (type == "skin") {
         s = DRAW.toDataURL();
-
     } else {
         s = JSON.stringify(SKIN_INFO);
         s = new Blob([s], { type: "application/octet-stream" });
@@ -660,11 +659,20 @@ const DrawTools = {
     },
     torch: {
         load: function (m) {
-            RCTX.globalCompositeOperation = m == "lighter" ? "color-dodge" : "color-burn";
+            RCTX.globalCompositeOperation = m == "dodge" ? "color-dodge" : "color-burn";
             RCTX.globalAlpha /= 4;
         },
         down: true, move: true,
-        modes: ["lighter", "darker"],
+        modes: ["dodge", "burn"],
+        protect: true
+    },
+    highlight: {
+        load: function (m) {
+            RCTX.globalCompositeOperation = m;
+            RCTX.globalAlpha /= 4;
+        },
+        down: true, move: true,
+        modes: ["lighter", "multiply"],
         protect: true
     },
     blackwhite: {

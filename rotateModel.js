@@ -122,16 +122,28 @@ function addTouchHandle(parent, allowBubble = true) {
       v[2] = (cos1 * sin2 + cos2 * sin1) * len;
       return v;
     }
-
-    let events = {
-      touchstart: start,
-      mmousedown: start,
-      touchmove: move,
-      mmousemove: move,
-      touchend: end,
-      mmouseup: end,
-      mmouseleave: end
-    };
+    let events;
+    if (window.TouchEvent) {
+      events = {
+        touchstart: start,
+        touchmove: move,
+        touchend: end,
+        touchcancel: end
+      };
+    } else if (window.PointerEvent) {
+      events = {
+        pointerdown: start,
+        pointermove: move,
+        pointerup: end,
+        pointercancel: end,
+      };
+    } else {
+      events = {
+        mousedown: start,
+        mousemove: move,
+        mouseup: end
+      };
+    }
     for (let i in events) {
       parent.addEventListener(i, events[i]);
     }
