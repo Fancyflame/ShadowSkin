@@ -1,3 +1,5 @@
+<h2><strong>ShadowSkin和ShadowSkin Newly已停止维护
+  <del>，因为我也看不懂我在写什么，我也忘了我写了什么</del>。ShadowSkin3正在制作中，敬请期待！</strong></h2>
 # ShadowSkin Newly
 <strong>Newly分支使用了新的编辑器页面</strong>
 <p>
