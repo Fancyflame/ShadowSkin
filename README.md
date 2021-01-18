@@ -46,5 +46,5 @@ because it still under development.
 </blockquote>
 <h3>我的皮肤可以下载吗？</h3>
 <blockquote>
-这是免费编辑器
+这是开源编辑器，就算我不给按钮你也能想办法搞出来
 </blockquote>
