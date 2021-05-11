@@ -1,5 +1,20 @@
-<h2><strong>ShadowSkin和ShadowSkin Newly已停止维护
-  <del>，因为我也看不懂我在写什么，我也忘了我写了什么</del>。ShadowSkin3正在制作中，敬请期待！创建仓库时链接会贴在这里的</strong></h2>
+
+# ShadowSkin和ShadowSkin Newly已停止维护
+由于ShadowSkin和ShadowSkin Newly设计方面出了比较大的问题，因此需要重构。
+
+# ShadowSkin3即将到来
+ShadowSkin3使用Vue重构，以及其他众多优秀类库来提升用户体验。
+
+### ShadowSkin3有什么改变？
++ 使用WebGL(Three.js)渲染，极大地提升了性能和操作度
++ 全新的UI
++ 高清皮肤
++ 自定义插件(JS)
++ 更高的兼容性
++ 其他有趣的新功能
+
+---
+  
 # ShadowSkin Newly
 <strong>Newly分支使用了新的编辑器页面</strong>
 <p>
