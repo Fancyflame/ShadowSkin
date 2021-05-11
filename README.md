@@ -13,6 +13,8 @@ ShadowSkin3使用Vue重构，以及其他众多优秀类库来提升用户体验
 + 更高的兼容性
 + 其他有趣的新功能
 
+**感谢您对ShadowSkin的关注**，ShadowSkin3仓库还尚未建立，目前项目仅在线下进行，当项目上传到Github时会将链接放在下方↓
+
 ---
   
 # ShadowSkin Newly
